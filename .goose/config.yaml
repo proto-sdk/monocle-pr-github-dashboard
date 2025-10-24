@@ -1,0 +1,38 @@
+# Goose Configuration for Proto GitHub Dashboard
+# This configuration is used for headless mode CI/CD operations
+
+# Provider settings (can be overridden by environment variables)
+GOOSE_PROVIDER: openai
+GOOSE_MODEL: gpt-4o
+
+# Alternative providers (uncomment to use)
+# GOOSE_PROVIDER: anthropic
+# GOOSE_MODEL: claude-3-5-sonnet-20241022
+
+# Disable keyring for headless mode
+keyring: false
+
+# Session settings
+session:
+  save_history: true
+  history_path: .goose/sessions
+
+# Extension settings
+extensions:
+  # Developer extension for code operations
+  - name: developer
+    enabled: true
+    
+  # Shell extension for command execution  
+  - name: shell
+    enabled: true
+
+# Recipe settings
+recipes:
+  default_path: .goose/recipes
+  continue_on_error: false
+
+# Logging
+logging:
+  level: INFO
+  file: .goose/goose.log

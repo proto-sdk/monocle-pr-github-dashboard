@@ -1,0 +1,81 @@
+name: PR Dashboard CI/CD
+description: Automated testing, commit, push and merge for Proto GitHub Dashboard
+version: 1.0.0
+
+tasks:
+  - id: test-dashboard
+    title: Test Dashboard Functionality
+    description: Verify dashboard loads and APIs work correctly
+    instructions: |
+      Test the Proto GitHub Dashboard by:
+      1. Check if index.html loads without errors
+      2. Verify config.js exists and has proper structure
+      3. Test that the dashboard HTML structure is valid
+      4. Check for any console errors in the JavaScript
+      5. Verify API endpoint configurations
+      
+      Use the shell to run basic HTML validation and JavaScript syntax checks.
+      Report any issues found.
+
+  - id: update-changelog
+    title: Update Changelog
+    description: Add entry to CHANGELOG.md with current changes
+    instructions: |
+      Update the CHANGELOG.md file with:
+      1. Current date and version
+      2. Summary of changes made
+      3. Any bug fixes or improvements
+      
+      Format the entry properly following the existing changelog structure.
+
+  - id: commit-changes
+    title: Commit Changes
+    description: Stage and commit all changes with descriptive message
+    instructions: |
+      Commit all changes to the repository:
+      1. Stage all modified and new files
+      2. Create a commit with a descriptive message following the format:
+         "feat: [description of changes]" for features
+         "fix: [description of fixes]" for bug fixes
+         "docs: [description]" for documentation updates
+      3. Include details about what was changed in the commit body
+
+  - id: push-to-remote
+    title: Push to Remote
+    description: Push committed changes to GitHub
+    instructions: |
+      Push the committed changes to the remote repository:
+      1. Check current branch name
+      2. Push to the appropriate remote branch
+      3. Verify push was successful
+      4. Report the commit hash and branch updated
+
+  - id: create-pr
+    title: Create Pull Request (Optional)
+    description: Create a PR if on a feature branch
+    instructions: |
+      If not on main branch:
+      1. Create a pull request to main branch
+      2. Add appropriate title and description
+      3. Label the PR appropriately
+      4. Report the PR URL
+
+settings:
+  sequential: true
+  continue_on_error: false
+  
+parameters:
+  - name: commit_message
+    type: string
+    default: "feat: automated dashboard updates"
+    description: Commit message for the changes
+    
+  - name: push_branch
+    type: string
+    default: "main"
+    description: Branch to push changes to
+    
+  - name: run_tests
+    type: boolean
+    default: true
+    description: Whether to run tests before committing
