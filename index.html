@@ -427,26 +427,36 @@ displayPRs = function(prs) { origDisplayPRs(prs); startUpdatedBadgesInterval(); 
             return brightness > 128 ? '#000000' : '#ffffff';
         }
         async function fetchPRs() {
-            const token = window.config && window.config.githubToken;
             const prList = document.getElementById('pr-list');
             const debugInfo = document.getElementById('debug-info');
             debugInfo.style.display = 'none';
             
-            if (!token) {
-                prList.innerHTML = '<div class="error">GitHub token required. Please configure config.js.</div>';
-                return;
-            }
-            
             prList.innerHTML = '<div class="loading">Loading pull requests...</div>';
             
             try {
-                const response = await fetch('https://api.github.com/repos/btc-mining/miner-firmware/pulls?state=all&base=main&sort=updated&direction=desc&per_page=100', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Accept': 'application/vnd.github.v3+json'
-                    },
-                    cache: 'no-store'
-                });
+                // Check if we're running locally (with server proxy) or on GitHub Pages
+                const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                let response;
+                
+                if (isLocal) {
+                    // Use proxy endpoint for local development
+                    response = await fetch('/api/github/repos/btc-mining/miner-firmware/pulls?state=all&base=main&sort=updated&direction=desc&per_page=100', {
+                        cache: 'no-store'
+                    });
+                } else {
+                    // Use direct GitHub API for GitHub Pages (with token from config.js)
+                    const token = window.config && window.config.githubToken;
+                    if (!token) {
+                        throw new Error('GitHub token not configured');
+                    }
+                    response = await fetch('https://api.github.com/repos/btc-mining/miner-firmware/pulls?state=all&base=main&sort=updated&direction=desc&per_page=100', {
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Accept': 'application/vnd.github.v3+json'
+                        },
+                        cache: 'no-store'
+                    });
+                }
                 
                 const responseData = await response.text();
                 let jsonData;
