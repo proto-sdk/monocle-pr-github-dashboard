@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Monocle PR Dashboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1a1a1a">
+    <link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
+    <style>
+        :root {
+            --primary-color: #1a1a1a;
+            --secondary-color: #2d2d2d;
+            --text-color: #ffffff;
+            --accent-color: #FF6B35;
+            --hover-color: #FF8C42;
+            --border-color: #444;
+            --success-color: #2ea44f;
+            --danger-color: #cb2431;
+            --merged-color: #6f42c1;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--primary-color);
+            color: var(--text-color);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Header section with Proto API docs styling */
+        .header {
+            background-color: var(--secondary-color);
+            padding: 2rem;
+            text-align: center;
+            border-bottom: 2px solid var(--accent-color);
+            margin: 0 -20px 2rem -20px;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            color: var(--text-color);
+        }
+        
+        .header-description {
+            margin: 1rem 0;
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .header-info {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .version {
+            display: inline-block;
+            background-color: var(--accent-color);
+            padding: 0.25rem 1rem;
+            border-radius: 20px;
+            font-size: 1rem;
+        }
+        
+        /* Info section */
+        .info-section {
+            background-color: var(--secondary-color);
+            padding: 2rem;
+            border-radius: 8px;
+            border: 1px solid var(--accent-color);
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .info-section h2 {
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+        }
+        
+        .info-section p {
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+        
+        .info-section a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+        
+        .info-section a:hover {
+            color: var(--hover-color);
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .feature-card {
+            background-color: var(--primary-color);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .feature-card h3 {
+            color: var(--accent-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .feature-card p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .setup-section {
+            background-color: var(--secondary-color);
+            padding: 2rem;
+            border-radius: 8px;
+            border: 1px solid var(--accent-color);
+            margin-bottom: 2rem;
+        }
+        
+        .setup-section h2 {
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+        }
+        
+        .setup-section ol {
+            margin-left: 1.5rem;
+            line-height: 1.8;
+        }
+        
+        .setup-section code {
+            background-color: var(--primary-color);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            color: var(--accent-color);
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin: 2rem 0;
+        }
+        
+        .button {
+            padding: 12px 24px;
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-block;
+            transition: background-color 0.3s;
+        }
+        
+        .button:hover {
+            background-color: var(--hover-color);
+        }
+        
+        .button.secondary {
+            background-color: transparent;
+            border: 2px solid var(--accent-color);
+        }
+        
+        .button.secondary:hover {
+            background-color: var(--accent-color);
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            background-color: var(--danger-color);
+            margin-left: 1rem;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            opacity: 0.7;
+            font-size: 0.9rem;
+            margin-top: 3rem;
+            border-top: 1px solid var(--border-color);
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>Monocle PR Dashboard</h1>
+        <p class="header-description">Secure Pull Request Tracking for btc-mining/miner-firmware</p>
+        <div class="header-info">
+            <span class="version">v2.0.0</span>
+            <span class="status-badge">Setup Required</span>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="info-section">
+            <h2>🔒 Secure Dashboard Ready</h2>
+            <p>
+                This dashboard is designed to work with a secure API proxy that keeps your GitHub Personal Access Token safe on the server.
+                Your PAT is never exposed in the browser or visible through DevTools.
+            </p>
+            <p>
+                <strong>Current Status:</strong> The dashboard is deployed but requires a serverless API backend to function.
+            </p>
+        </div>
+
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>🚀 Real-time PR Tracking</h3>
+                <p>Monitor pull requests from btc-mining/miner-firmware with live updates every 15 minutes.</p>
+            </div>
+            <div class="feature-card">
+                <h3>🔐 Secure Architecture</h3>
+                <p>Your GitHub PAT stays on the server. The dashboard never sees or stores your credentials.</p>
+            </div>
+            <div class="feature-card">
+                <h3>📊 Advanced Filtering</h3>
+                <p>Filter by author, title, and status. View statistics for open, closed, and merged PRs.</p>
+            </div>
+            <div class="feature-card">
+                <h3>🎨 Proto Theme</h3>
+                <p>Beautiful dark theme matching the Proto API documentation style.</p>
+            </div>
+        </div>
+
+        <div class="setup-section">
+            <h2>Setup Instructions</h2>
+            <p>To make this dashboard fully functional, you need to deploy the API proxy with your GitHub PAT:</p>
+            
+            <h3>Option 1: Deploy to Vercel (Recommended)</h3>
+            <ol>
+                <li>Fork the repository to your GitHub account</li>
+                <li>Sign up for a free <a href="https://vercel.com" target="_blank">Vercel account</a></li>
+                <li>Import the <code>serverless-api</code> folder as a new project</li>
+                <li>Add your GitHub PAT as an environment variable: <code>GITHUB_PAT</code></li>
+                <li>Deploy and get your API URL</li>
+                <li>Update the dashboard to use your API endpoint</li>
+            </ol>
+
+            <h3>Option 2: Deploy to Netlify Functions</h3>
+            <ol>
+                <li>Sign up for a free <a href="https://netlify.com" target="_blank">Netlify account</a></li>
+                <li>Create a new site from the <code>serverless-api</code> folder</li>
+                <li>Add your GitHub PAT in Site Settings → Environment Variables</li>
+                <li>Deploy and use the functions endpoint</li>
+            </ol>
+
+            <h3>Option 3: Use Local Dashboard</h3>
+            <ol>
+                <li>Open your local dashboard at <code>file:///Users/hmoses/monocle-pr-github-dashboard/index.html</code></li>
+                <li>Enter your GitHub PAT directly (stored in browser localStorage)</li>
+                <li>Use immediately without any server setup</li>
+            </ol>
+        </div>
+
+        <div class="button-group">
+            <a href="file:///Users/hmoses/monocle-pr-github-dashboard/index.html" class="button">
+                Open Local Dashboard
+            </a>
+            <a href="https://github.com/proto-sdk/monocle-pr-github-dashboard" class="button secondary" target="_blank">
+                View on GitHub
+            </a>
+        </div>
+
+        <div class="info-section">
+            <h2>Why Serverless Backend?</h2>
+            <p>
+                Blockcell is a static file hosting service, perfect for HTML, CSS, and client-side JavaScript.
+                However, to keep your GitHub PAT secure, we need a server-side component that can:
+            </p>
+            <ul style="text-align: left; max-width: 600px; margin: 1rem auto;">
+                <li>Store your PAT securely as an environment variable</li>
+                <li>Make authenticated requests to GitHub on your behalf</li>
+                <li>Return data to the dashboard without exposing credentials</li>
+            </ul>
+            <p>
+                This architecture ensures your PAT is never exposed in the browser, making it safe to share the dashboard with your team.
+            </p>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>Monocle PR Dashboard • Part of the Proto SDK Suite</p>
+        <p>Powered by Blockcell Static Hosting</p>
+    </footer>
+</body>
+</html>
