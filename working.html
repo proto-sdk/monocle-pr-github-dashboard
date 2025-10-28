@@ -198,16 +198,11 @@
     </div>
 
     <script>
+        console.log('Dashboard starting...');
+        
         let allPRs = [];
         let timerInterval;
         let timeLeft = 900; // 15 minutes in seconds
-        
-        // Token management - will be replaced with environment variable in production
-        function getToken() {
-            // This will be replaced with environment variable or config in production
-            // For GitHub Pages, use GitHub Actions to inject token
-            return 'YOUR_GITHUB_TOKEN_HERE';
-        }
         
         function updateTimer() {
             const mins = Math.floor(timeLeft / 60);
@@ -230,23 +225,33 @@
         }
         
         function loadPRs() {
+            console.log('Loading PRs...');
             const container = document.getElementById('prs');
             container.innerHTML = '<div class="loading">Loading pull requests...</div>';
             
+            // Token should be stored securely, not in code
+            // For production, use environment variables or secure storage
+            const token = prompt('Please enter your GitHub token:') || '';
+            
             fetch('https://api.github.com/repos/btc-mining/miner-firmware/pulls?state=all&base=main&sort=updated&direction=desc&per_page=100', {
                 headers: {
-                    'Authorization': 'Bearer ' + getToken(),
+                    'Authorization': 'Bearer ' + token,
                     'Accept': 'application/vnd.github.v3+json'
                 }
             })
-            .then(r => r.json())
+            .then(r => {
+                console.log('Response status:', r.status);
+                return r.json();
+            })
             .then(data => {
+                console.log('Loaded', data.length, 'PRs');
                 allPRs = data;
                 updateStats();
                 applyFilters();
                 startTimer();
             })
             .catch(err => {
+                console.error('Error:', err);
                 container.innerHTML = '<div class="loading">Error loading PRs: ' + err.message + '</div>';
             });
         }
@@ -318,6 +323,7 @@
         }
         
         // Load on start
+        console.log('Starting initial load...');
         loadPRs();
     </script>
 </body>

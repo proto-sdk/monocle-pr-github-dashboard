@@ -202,13 +202,6 @@
         let timerInterval;
         let timeLeft = 900; // 15 minutes in seconds
         
-        // Token management - will be replaced with environment variable in production
-        function getToken() {
-            // This will be replaced with environment variable or config in production
-            // For GitHub Pages, use GitHub Actions to inject token
-            return 'YOUR_GITHUB_TOKEN_HERE';
-        }
-        
         function updateTimer() {
             const mins = Math.floor(timeLeft / 60);
             const secs = timeLeft % 60;
@@ -235,7 +228,7 @@
             
             fetch('https://api.github.com/repos/btc-mining/miner-firmware/pulls?state=all&base=main&sort=updated&direction=desc&per_page=100', {
                 headers: {
-                    'Authorization': 'Bearer ' + getToken(),
+                    'Authorization': 'Bearer ' + (localStorage.getItem('github_token') || prompt('Enter GitHub token:')),
                     'Accept': 'application/vnd.github.v3+json'
                 }
             })
