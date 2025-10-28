@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub OAuth Callback - Bitcoin Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        
+        body {
+            background: #000000;
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .auth-container {
+            background: #1a1a1a;
+            border: 2px solid #FF6B35;
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #FF6B35;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+        
+        .status {
+            font-size: 18px;
+            margin: 20px 0;
+            color: #999;
+        }
+        
+        .spinner {
+            border: 3px solid #333;
+            border-top: 3px solid #FF6B35;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            color: #FF6B6B;
+            background: rgba(255, 107, 107, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .success {
+            color: #00E396;
+            background: rgba(0, 227, 150, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .button {
+            background: #FF6B35;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 20px;
+        }
+        
+        .button:hover {
+            background: #FF8C42;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <h1>🔐 GitHub Authentication</h1>
+        <div id="status" class="status">Processing authentication...</div>
+        <div id="spinner" class="spinner"></div>
+        <div id="message"></div>
+        <a href="index.html" id="continue" class="button" style="display: none;">Continue to Dashboard</a>
+    </div>
+
+    <script>
+        // GitHub OAuth configuration
+        const CLIENT_ID = 'YOUR_CLIENT_ID'; // Will be replaced with actual client ID
+        const REDIRECT_URI = window.location.origin + '/auth.html';
+        
+        async function handleCallback() {
+            const params = new URLSearchParams(window.location.search);
+            const code = params.get('code');
+            const state = params.get('state');
+            const error = params.get('error');
+            
+            const statusEl = document.getElementById('status');
+            const messageEl = document.getElementById('message');
+            const spinnerEl = document.getElementById('spinner');
+            const continueEl = document.getElementById('continue');
+            
+            if (error) {
+                statusEl.textContent = 'Authentication failed';
+                messageEl.innerHTML = `<div class="error">Error: ${error}</div>`;
+                spinnerEl.style.display = 'none';
+                return;
+            }
+            
+            if (!code) {
+                statusEl.textContent = 'No authorization code received';
+                messageEl.innerHTML = '<div class="error">Invalid callback parameters</div>';
+                spinnerEl.style.display = 'none';
+                return;
+            }
+            
+            // Verify state to prevent CSRF attacks
+            const savedState = sessionStorage.getItem('oauth_state');
+            if (state !== savedState) {
+                statusEl.textContent = 'Security verification failed';
+                messageEl.innerHTML = '<div class="error">State mismatch - possible CSRF attack</div>';
+                spinnerEl.style.display = 'none';
+                return;
+            }
+            
+            try {
+                statusEl.textContent = 'Exchanging code for access token...';
+                
+                // For GitHub OAuth Apps, we need a backend to exchange the code
+                // Since we're running locally, we'll use GitHub's device flow instead
+                // For now, we'll store the code and note that a backend is needed
+                
+                // In a production environment, you would:
+                // 1. Send the code to your backend
+                // 2. Backend exchanges code for access token using client secret
+                // 3. Backend returns the access token to frontend
+                
+                // For demonstration, we'll use a workaround with GitHub's API
+                // Note: This requires setting up a GitHub App or using a proxy service
+                
+                messageEl.innerHTML = `
+                    <div class="success">
+                        ✅ Authorization successful!<br>
+                        <small>Code: ${code.substring(0, 8)}...</small>
+                    </div>
+                    <div class="error" style="margin-top: 20px;">
+                        ⚠️ Note: To complete the OAuth flow, you need to:<br>
+                        1. Set up a backend server to exchange the code for a token<br>
+                        2. Or use GitHub's Personal Access Token for now<br>
+                        3. Or deploy to GitHub Pages with a proxy service
+                    </div>
+                `;
+                
+                // Store the authorization code temporarily
+                sessionStorage.setItem('github_auth_code', code);
+                
+                statusEl.textContent = 'Authorization complete';
+                spinnerEl.style.display = 'none';
+                continueEl.style.display = 'inline-block';
+                
+            } catch (err) {
+                statusEl.textContent = 'Authentication error';
+                messageEl.innerHTML = `<div class="error">Error: ${err.message}</div>`;
+                spinnerEl.style.display = 'none';
+            }
+        }
+        
+        // Handle the callback when page loads
+        if (window.location.search) {
+            handleCallback();
+        } else {
+            document.getElementById('status').textContent = 'No authorization code found';
+            document.getElementById('spinner').style.display = 'none';
+            document.getElementById('message').innerHTML = 
+                '<div class="error">This page handles OAuth callbacks. Please start from the main dashboard.</div>';
+            document.getElementById('continue').style.display = 'inline-block';
+        }
+    </script>
+</body>
+</html>
