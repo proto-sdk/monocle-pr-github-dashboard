@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Monocle PR Dashboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1a1a1a">
+    <link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
+    <style>
+        :root {
+            --primary-color: #1a1a1a;
+            --secondary-color: #2d2d2d;
+            --text-color: #ffffff;
+            --accent-color: #FF6B35;
+            --hover-color: #FF8C42;
+            --border-color: #444;
+            --success-color: #2ea44f;
+            --danger-color: #cb2431;
+            --merged-color: #6f42c1;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--primary-color);
+            color: var(--text-color);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Header section with Proto API docs styling */
+        .header {
+            background-color: var(--secondary-color);
+            padding: 2rem;
+            text-align: center;
+            border-bottom: 2px solid var(--accent-color);
+            margin: 0 -20px 2rem -20px;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            color: var(--text-color);
+        }
+        
+        .header-description {
+            margin: 1rem 0;
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .header-info {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .version {
+            display: inline-block;
+            background-color: var(--accent-color);
+            padding: 0.25rem 1rem;
+            border-radius: 20px;
+            font-size: 1rem;
+        }
+        
+        .api-status {
+            display: inline-block;
+            padding: 0.25rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            background-color: var(--success-color);
+        }
+        
+        .api-status.error {
+            background-color: var(--danger-color);
+        }
+        
+        /* Controls section */
+        .controls-section {
+            background-color: var(--secondary-color);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--accent-color);
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .refresh-button {
+            padding: 10px 20px;
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+        
+        .refresh-button:hover {
+            background-color: var(--hover-color);
+        }
+        
+        .refresh-button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        
+        #refresh-timer {
+            display: inline-block;
+            margin-left: 1rem;
+            font-family: monospace;
+            color: var(--accent-color);
+            font-weight: 600;
+            padding: 8px 12px;
+            background-color: var(--primary-color);
+            border-radius: 6px;
+        }
+        
+        /* Filter section */
+        .filter-section {
+            background-color: var(--secondary-color);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--accent-color);
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .filter-input {
+            padding: 10px 15px;
+            background-color: var(--primary-color);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            min-width: 200px;
+            font-size: 14px;
+        }
+        
+        .filter-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+        
+        .filter-input option {
+            background-color: var(--primary-color);
+            color: var(--text-color);
+        }
+        
+        /* Stats section */
+        .stats-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background-color: var(--secondary-color);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--accent-color);
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-top: 0.5rem;
+        }
+        
+        /* PR Cards */
+        .pr-card {
+            background-color: var(--secondary-color);
+            border: 1px solid var(--accent-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s;
+        }
+        
+        .pr-card:hover {
+            border-color: var(--hover-color);
+            transform: translateX(5px);
+        }
+        
+        .pr-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+            gap: 1rem;
+        }
+        
+        .pr-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 0;
+            flex: 1;
+        }
+        
+        .pr-title a {
+            color: var(--text-color);
+            text-decoration: none;
+        }
+        
+        .pr-title a:hover {
+            color: var(--accent-color);
+        }
+        
+        .pr-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: white;
+            white-space: nowrap;
+        }
+        
+        .pr-status.open {
+            background-color: var(--success-color);
+        }
+        
+        .pr-status.closed {
+            background-color: var(--danger-color);
+        }
+        
+        .pr-status.merged {
+            background-color: var(--merged-color);
+        }
+        
+        .pr-meta {
+            color: var(--text-color);
+            opacity: 0.8;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .pr-labels {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        
+        .pr-label {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        /* Loading and error states */
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-color);
+            opacity: 0.7;
+            font-size: 1.1rem;
+        }
+        
+        .error {
+            background-color: rgba(203, 36, 49, 0.1);
+            border: 1px solid var(--danger-color);
+            color: #ff6b6b;
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+            margin: 2rem 0;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border-color);
+            border-top-color: var(--accent-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>Monocle PR Dashboard</h1>
+        <p class="header-description">Real-time Pull Request Tracking for btc-mining/miner-firmware</p>
+        <div class="header-info">
+            <span class="version">v2.0.0</span>
+            <span id="pr-count" class="version" style="background-color: var(--success-color);">0 PRs</span>
+            <span id="api-status" class="api-status">API: Connected</span>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="controls-section">
+            <button onclick="fetchPRs()" class="refresh-button" id="refresh-btn">
+                <span id="refresh-text">Load Pull Requests</span>
+            </button>
+            <span id="refresh-timer">15:00</span>
+        </div>
+        
+        <div class="stats-section" id="stats-section" style="display: none;">
+            <div class="stat-card">
+                <div class="stat-value" id="open-count">0</div>
+                <div class="stat-label">Open PRs</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="closed-count">0</div>
+                <div class="stat-label">Closed PRs</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="merged-count">0</div>
+                <div class="stat-label">Merged PRs</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="total-count">0</div>
+                <div class="stat-label">Total PRs</div>
+            </div>
+        </div>
+        
+        <div class="filter-section">
+            <input type="text" id="author-filter" class="filter-input" placeholder="Filter by author" onkeyup="filterAndDisplayPRs()">
+            <input type="text" id="title-filter" class="filter-input" placeholder="Filter by title" onkeyup="filterAndDisplayPRs()">
+            <select id="status-filter" class="filter-input" onchange="filterAndDisplayPRs()">
+                <option value="all">All PRs</option>
+                <option value="open">Open</option>
+                <option value="closed">Closed</option>
+                <option value="merged">Merged</option>
+            </select>
+        </div>
+        
+        <div id="pr-list">
+            <div class="loading">Click "Load Pull Requests" to fetch data from GitHub</div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration - Using Blockcell API proxy
+        const API_BASE_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3000'
+            : window.location.hostname.includes('blockcell') 
+                ? '/sites/monocle-pr-api'  // Use relative path when on Blockcell
+                : 'https://blockcell.sqprod.co/sites/monocle-pr-api';
+        
+        let allPRs = [];
+        let refreshInterval;
+        let refreshTimeout;
+        const REFRESH_INTERVAL = 15 * 60 * 1000; // 15 minutes
+
+        // Start refresh timer
+        function startRefreshTimer() {
+            if (refreshInterval) clearInterval(refreshInterval);
+            if (refreshTimeout) clearTimeout(refreshTimeout);
+            
+            let timeLeft = REFRESH_INTERVAL;
+            updateRefreshTimer(timeLeft);
+            
+            refreshInterval = setInterval(() => {
+                timeLeft -= 1000;
+                if (timeLeft <= 0) {
+                    fetchPRs();
+                    timeLeft = REFRESH_INTERVAL;
+                } else {
+                    updateRefreshTimer(timeLeft);
+                }
+            }, 1000);
+        }
+
+        function updateRefreshTimer(timeLeft) {
+            const minutes = Math.floor(timeLeft / 60000);
+            const seconds = Math.floor((timeLeft % 60000) / 1000);
+            const timerElement = document.getElementById('refresh-timer');
+            if (timerElement) {
+                timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+        }
+
+        function updateStats() {
+            const openCount = allPRs.filter(pr => !pr.closed_at).length;
+            const closedCount = allPRs.filter(pr => pr.closed_at && !pr.merged_at).length;
+            const mergedCount = allPRs.filter(pr => pr.merged_at).length;
+            const totalCount = allPRs.length;
+            
+            document.getElementById('pr-count').textContent = `${totalCount} PRs`;
+            document.getElementById('open-count').textContent = openCount;
+            document.getElementById('closed-count').textContent = closedCount;
+            document.getElementById('merged-count').textContent = mergedCount;
+            document.getElementById('total-count').textContent = totalCount;
+            
+            if (totalCount > 0) {
+                document.getElementById('stats-section').style.display = 'grid';
+            }
+        }
+
+        function filterAndDisplayPRs() {
+            const authorFilter = document.getElementById('author-filter').value.toLowerCase();
+            const titleFilter = document.getElementById('title-filter').value.toLowerCase();
+            const statusFilter = document.getElementById('status-filter').value;
+
+            const filteredPRs = allPRs.filter(pr => {
+                const matchesAuthor = pr.user.login.toLowerCase().includes(authorFilter);
+                const matchesTitle = pr.title.toLowerCase().includes(titleFilter);
+                
+                let matchesStatus = true;
+                if (statusFilter === 'open') {
+                    matchesStatus = !pr.closed_at;
+                } else if (statusFilter === 'closed') {
+                    matchesStatus = pr.closed_at && !pr.merged_at;
+                } else if (statusFilter === 'merged') {
+                    matchesStatus = pr.merged_at;
+                }
+
+                return matchesAuthor && matchesTitle && matchesStatus;
+            });
+
+            displayPRs(filteredPRs);
+        }
+
+        function displayPRs(prs) {
+            const prList = document.getElementById('pr-list');
+            
+            if (prs.length === 0) {
+                prList.innerHTML = '<div class="loading">No pull requests found</div>';
+                return;
+            }
+
+            prList.innerHTML = prs.map(pr => {
+                const createdDate = new Date(pr.created_at).toLocaleDateString();
+                const updatedDate = new Date(pr.updated_at).toLocaleDateString();
+                
+                let status = 'Open';
+                let statusClass = 'open';
+                
+                if (pr.merged_at) {
+                    status = 'Merged';
+                    statusClass = 'merged';
+                } else if (pr.closed_at) {
+                    status = 'Closed';
+                    statusClass = 'closed';
+                }
+
+                const labels = pr.labels.map(label => {
+                    const textColor = getContrastColor(label.color);
+                    return `<span class="pr-label" style="background-color: #${label.color}; color: ${textColor}">
+                        ${label.name}
+                    </span>`;
+                }).join('');
+
+                return `
+                    <div class="pr-card">
+                        <div class="pr-header">
+                            <h3 class="pr-title">
+                                <a href="${pr.html_url}" target="_blank">#${pr.number}: ${pr.title}</a>
+                            </h3>
+                            <span class="pr-status ${statusClass}">${status}</span>
+                        </div>
+                        <div class="pr-meta">
+                            by ${pr.user.login} • Created: ${createdDate} • Updated: ${updatedDate}
+                        </div>
+                        <div class="pr-labels">
+                            ${labels}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function getContrastColor(hexcolor) {
+            const r = parseInt(hexcolor.substr(0, 2), 16);
+            const g = parseInt(hexcolor.substr(2, 2), 16);
+            const b = parseInt(hexcolor.substr(4, 2), 16);
+            const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+            return brightness > 128 ? '#000000' : '#ffffff';
+        }
+
+        async function fetchPRs() {
+            const prList = document.getElementById('pr-list');
+            const refreshBtn = document.getElementById('refresh-btn');
+            const refreshText = document.getElementById('refresh-text');
+            const apiStatus = document.getElementById('api-status');
+            
+            // Update UI to loading state
+            refreshBtn.disabled = true;
+            refreshText.innerHTML = '<span class="spinner"></span>Loading...';
+            prList.innerHTML = '<div class="loading">Fetching pull requests from GitHub...</div>';
+            
+            try {
+                // Call our serverless API proxy
+                const response = await fetch(`${API_BASE_URL}/api/github/repos/btc-mining/miner-firmware/pulls?state=all&base=main&sort=updated&direction=desc&per_page=100`);
+                
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status} ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                allPRs = data;
+                
+                // Update API status
+                apiStatus.textContent = 'API: Connected';
+                apiStatus.classList.remove('error');
+                
+                // Update stats and display
+                updateStats();
+                filterAndDisplayPRs();
+                
+                // Start refresh timer
+                startRefreshTimer();
+                
+            } catch (error) {
+                console.error('Error fetching PRs:', error);
+                prList.innerHTML = `
+                    <div class="error">
+                        <h3>Failed to load pull requests</h3>
+                        <p>${error.message}</p>
+                        <p style="margin-top: 10px;">
+                            Make sure the API server is running and accessible.
+                        </p>
+                    </div>
+                `;
+                
+                // Update API status
+                apiStatus.textContent = 'API: Disconnected';
+                apiStatus.classList.add('error');
+            } finally {
+                // Reset button state
+                refreshBtn.disabled = false;
+                refreshText.textContent = 'Refresh';
+            }
+        }
+
+        // Initialize on page load
+        window.onload = function() {
+            console.log('Dashboard loaded. API endpoint:', API_BASE_URL);
+            startRefreshTimer();
+        };
+    </script>
+</body>
+</html>
