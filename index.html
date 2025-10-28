@@ -1,419 +1,211 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
+    <title>Proto API PR Dashboard</title>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bitcoin Network Statistics</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        }
-        
         body {
-            background: #000000;
-            min-height: 100vh;
-            padding: 40px 20px;
-            color: white;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #000;
+            color: #fff;
+            margin: 0;
+            padding: 20px;
         }
-        
         .container {
             max-width: 1400px;
             margin: 0 auto;
         }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
+        h1 {
+            color: #FF6B35;
+            font-size: 28px;
         }
-        
-        .header h1 {
+        .filters {
+            background: #0a0a0a;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #222;
+            margin-bottom: 25px;
+        }
+        .filter-input {
+            background: #1a1a1a;
             color: white;
-            font-size: 48px;
-            font-weight: 700;
+            border: 1px solid #333;
+            padding: 10px;
+            border-radius: 6px;
+            margin-right: 10px;
+        }
+        .stats {
+            padding: 10px;
+            background: rgba(255,107,53,0.1);
+            border: 1px solid #FF6B35;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        .pr-card {
+            background: #111;
+            border: 1px solid #222;
+            border-radius: 8px;
+            padding: 15px;
             margin-bottom: 10px;
         }
-        
-        .header p {
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 18px;
+        .pr-card:hover {
+            border-color: #FF6B35;
         }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 24px;
-            margin-bottom: 60px;
-        }
-        
-        .stat-card {
-            background: #1a1a1a;
-            border: 2px solid #FF6B35;
-            border-radius: 16px;
-            padding: 28px;
-            transition: all 0.3s ease;
-        }
-        
-        .stat-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 24px rgba(255, 107, 53, 0.15);
-            border-color: #FF8C42;
-        }
-        
-        .stat-icon {
-            font-size: 32px;
-            margin-bottom: 16px;
-            display: inline-block;
-        }
-        
-        .stat-value {
-            font-size: 28px;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: #ffffff;
-        }
-        
-        .stat-label {
-            font-size: 14px;
-            color: #999999;
-            font-weight: 500;
-        }
-        
-        .bitcoin-orange { color: #f7931a; }
-        .hash-blue { color: #0077FF; }
-        .difficulty-purple { color: #9B51E0; }
-        .blocks-red { color: #FF6B6B; }
-        .price-green { color: #00E396; }
-        .miners-teal { color: #00C2A8; }
-        .energy-yellow { color: #FEB019; }
-        .pool-cyan { color: #00D4FF; }
-        .breakeven-pink { color: #FF69B4; }
-        .time-lime { color: #32CD32; }
-        .fee-orange { color: #FFA500; }
-        .market-purple { color: #8B4789; }
-        .revenue-gold { color: #FFD700; }
-        .next-blue { color: #4169E1; }
-        .mempool-coral { color: #FF7F50; }
-        
-        .footer {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            padding: 24px;
-            text-align: center;
+        .pr-title a {
             color: white;
+            text-decoration: none;
+            font-size: 16px;
         }
-        
+        .pr-title a:hover {
+            color: #FF6B35;
+        }
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            color: white;
+            display: inline-block;
+            margin-left: 10px;
+        }
+        .open { background: #2ea44f; }
+        .closed { background: #cb2431; }
+        .merged { background: #6f42c1; }
+        .pr-meta {
+            color: #999;
+            font-size: 13px;
+            margin-top: 5px;
+        }
         .loading {
-            opacity: 0.6;
+            text-align: center;
+            padding: 60px;
+            color: #666;
         }
-        
-        .error {
-            color: #FF6B6B !important;
+        .refresh-btn {
+            background: #FF6B35;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>⚡ Bitcoin Network Statistics</h1>
-            <p>Real-time blockchain metrics and mining profitability data</p>
+        <h1>Proto API PR Dashboard</h1>
+        <button class="refresh-btn" onclick="location.reload()">Refresh</button>
+        
+        <div class="stats" id="stats">Loading statistics...</div>
+        
+        <div class="filters">
+            <input type="text" id="author" class="filter-input" placeholder="Filter by author" onkeyup="filterPRs()">
+            <input type="text" id="title" class="filter-input" placeholder="Filter by title" onkeyup="filterPRs()">
+            <select id="status" class="filter-input" onchange="filterPRs()">
+                <option value="">All PRs</option>
+                <option value="open">Open</option>
+                <option value="closed">Closed</option>
+                <option value="merged">Merged</option>
+            </select>
         </div>
         
-        <div class="stats-grid">
-            <!-- Row 1: Core Metrics -->
-            <div class="stat-card">
-                <span class="stat-icon bitcoin-orange">₿</span>
-                <div class="stat-value" id="price">$0</div>
-                <div class="stat-label">Bitcoin Price (USD)</div>
-            </div>
-            
-            <div class="stat-card">
-                <span class="stat-icon hash-blue">⚡</span>
-                <div class="stat-value" id="hashrate">0 EH/s</div>
-                <div class="stat-label">Network Hash Rate</div>
-            </div>
-            
-            <div class="stat-card">
-                <span class="stat-icon difficulty-purple">🎯</span>
-                <div class="stat-value" id="difficulty">0</div>
-                <div class="stat-label">Mining Difficulty</div>
-            </div>
-            
-            <!-- Row 2: Block Info -->
-            <div class="stat-card">
-                <span class="stat-icon blocks-red">🧱</span>
-                <div class="stat-value" id="blockHeight">0</div>
-                <div class="stat-label">Current Block Height</div>
-            </div>
-            
-            <div class="stat-card">
-                <span class="stat-icon miners-teal">🏆</span>
-                <div class="stat-value" id="blockReward">0 BTC</div>
-                <div class="stat-label">Block Reward</div>
-            </div>
-            
-            <div class="stat-card">
-                <span class="stat-icon price-green">⏲️</span>
-                <div class="stat-value" id="interval">0s</div>
-                <div class="stat-label">Block Interval</div>
-            </div>
-            
-            <!-- Row 3: Market Metrics -->
-            <div class="stat-card">
-                <span class="stat-icon market-purple">📊</span>
-                <div class="stat-value" id="marketCap">$0B</div>
-                <div class="stat-label">Market Cap</div>
-            </div>
-            
-            <div class="stat-card">
-                <span class="stat-icon fee-orange">💰</span>
-                <div class="stat-value" id="avgFee">0 sat/vB</div>
-                <div class="stat-label">Avg Transaction Fee</div>
-            </div>
-            
-            <div class="stat-card">
-                <span class="stat-icon mempool-coral">📦</span>
-                <div class="stat-value" id="mempoolSize">0 txs</div>
-                <div class="stat-label">Mempool Size</div>
-            </div>
-            
-            <!-- Row 4: Mining Economics -->
-            <div class="stat-card">
-                <span class="stat-icon revenue-gold">💵</span>
-                <div class="stat-value" id="dailyRevenue">$0M</div>
-                <div class="stat-label">Daily Mining Revenue</div>
-            </div>
-            
-            <div class="stat-card">
-                <span class="stat-icon next-blue">📅</span>
-                <div class="stat-value" id="nextAdjustment">0 blocks</div>
-                <div class="stat-label">Next Difficulty Adjustment</div>
-            </div>
-            
-            <div class="stat-card">
-                <span class="stat-icon breakeven-pink">📈</span>
-                <div class="stat-value" id="adjustmentEstimate">0%</div>
-                <div class="stat-label">Adjustment Estimate</div>
-            </div>
-            
-            <!-- Row 5: Additional Stats -->
-            <div class="stat-card">
-                <span class="stat-icon bitcoin-orange">🪙</span>
-                <div class="stat-value" id="totalSupply">0 BTC</div>
-                <div class="stat-label">Total Bitcoin Supply</div>
-            </div>
-            
-            <div class="stat-card">
-                <span class="stat-icon time-lime">⏰</span>
-                <div class="stat-value" id="blockTime">0 min ago</div>
-                <div class="stat-label">Last Block Time</div>
-            </div>
-            
-            <div class="stat-card">
-                <span class="stat-icon pool-cyan">🌐</span>
-                <div class="stat-value" id="nodeCount">~15,000</div>
-                <div class="stat-label">Reachable Nodes</div>
-            </div>
-        </div>
-        
-        <div class="footer">
-            <p id="lastUpdated">Loading...</p>
-            <p style="margin-top: 10px; font-size: 12px; opacity: 0.7;">
-                Data sources: CoinGecko | Mempool.space | Blockchain.info | Blockstream
-            </p>
+        <div id="prs">
+            <div class="loading">Loading pull requests...</div>
         </div>
     </div>
 
     <script>
-        console.log('Dashboard starting...');
+        let allPRs = [];
         
-        async function fetchData() {
-            console.log('Fetching data...');
-            
-            // Bitcoin price
-            try {
-                const priceResponse = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_market_cap=true');
-                const priceData = await priceResponse.json();
-                if (priceData.bitcoin) {
-                    document.getElementById('price').textContent = '$' + priceData.bitcoin.usd.toLocaleString();
-                    document.getElementById('marketCap').textContent = '$' + (priceData.bitcoin.usd_market_cap / 1e9).toFixed(1) + 'B';
-                    document.getElementById('price').classList.remove('error', 'loading');
-                    document.getElementById('marketCap').classList.remove('error', 'loading');
-                }
-            } catch (e) {
-                console.error('Price error:', e);
-                document.getElementById('price').textContent = 'Error';
-                document.getElementById('price').classList.add('error');
-            }
-            
-            // Hashrate
-            try {
-                const hashResponse = await fetch('https://mempool.space/api/v1/mining/hashrate/3d');
-                const hashData = await hashResponse.json();
-                if (hashData && hashData.currentHashrate) {
-                    const hashrateInEH = hashData.currentHashrate / 1e18;
-                    document.getElementById('hashrate').textContent = hashrateInEH.toFixed(2) + ' EH/s';
-                    document.getElementById('hashrate').classList.remove('error', 'loading');
-                }
-            } catch (e) {
-                console.error('Hashrate error:', e);
-                document.getElementById('hashrate').textContent = 'N/A';
-                document.getElementById('hashrate').classList.add('error');
-            }
-            
-            // Difficulty adjustment
-            try {
-                const adjustResponse = await fetch('https://mempool.space/api/v1/difficulty-adjustment');
-                const adjustData = await adjustResponse.json();
-                if (adjustData) {
-                    document.getElementById('nextAdjustment').textContent = '~' + adjustData.remainingBlocks + ' blocks';
-                    const estimate = adjustData.difficultyChange || 0;
-                    const sign = estimate >= 0 ? '+' : '';
-                    document.getElementById('adjustmentEstimate').textContent = sign + estimate.toFixed(2) + '%';
-                    document.getElementById('nextAdjustment').classList.remove('error', 'loading');
-                    document.getElementById('adjustmentEstimate').classList.remove('error', 'loading');
-                }
-            } catch (e) {
-                console.error('Adjustment error:', e);
-            }
-            
-            // Fees
-            try {
-                const feeResponse = await fetch('https://mempool.space/api/v1/fees/recommended');
-                const feeData = await feeResponse.json();
-                if (feeData) {
-                    document.getElementById('avgFee').textContent = feeData.halfHourFee + ' sat/vB';
-                    document.getElementById('avgFee').classList.remove('error', 'loading');
-                }
-            } catch (e) {
-                console.error('Fee error:', e);
-            }
-            
-            // Difficulty
-            try {
-                const diffResponse = await fetch('https://blockchain.info/q/getdifficulty');
-                const difficulty = await diffResponse.text();
-                document.getElementById('difficulty').textContent = (parseFloat(difficulty) / 1e12).toFixed(2) + 'T';
-                document.getElementById('difficulty').classList.remove('error', 'loading');
-            } catch (e) {
-                console.error('Difficulty error:', e);
-                document.getElementById('difficulty').textContent = 'Error';
-                document.getElementById('difficulty').classList.add('error');
-            }
-            
-            // Block height
-            try {
-                const blockResponse = await fetch('https://blockstream.info/api/blocks/tip/height');
-                const blockHeight = await blockResponse.text();
-                document.getElementById('blockHeight').textContent = parseInt(blockHeight).toLocaleString();
-                document.getElementById('blockHeight').classList.remove('error', 'loading');
-            } catch (e) {
-                console.error('Block height error:', e);
-                document.getElementById('blockHeight').textContent = 'Error';
-                document.getElementById('blockHeight').classList.add('error');
-            }
-            
-            // Block reward
-            try {
-                const rewardResponse = await fetch('https://blockchain.info/q/bcperblock');
-                const reward = await rewardResponse.text();
-                document.getElementById('blockReward').textContent = reward + ' BTC';
-                document.getElementById('blockReward').classList.remove('error', 'loading');
-                
-                // Calculate daily revenue
-                const priceText = document.getElementById('price').textContent;
-                if (priceText && !priceText.includes('Error')) {
-                    const price = parseFloat(priceText.replace(/[^0-9.]/g, ''));
-                    const dailyBtc = parseFloat(reward) * 144;
-                    const dailyUsd = price * dailyBtc;
-                    document.getElementById('dailyRevenue').textContent = '$' + (dailyUsd / 1e6).toFixed(2) + 'M';
-                    document.getElementById('dailyRevenue').classList.remove('error', 'loading');
-                }
-            } catch (e) {
-                console.error('Block reward error:', e);
-                document.getElementById('blockReward').textContent = 'Error';
-                document.getElementById('blockReward').classList.add('error');
-            }
-            
-            // Interval
-            try {
-                const intervalResponse = await fetch('https://blockchain.info/q/interval');
-                const interval = await intervalResponse.text();
-                document.getElementById('interval').textContent = interval + 's';
-                document.getElementById('interval').classList.remove('error', 'loading');
-            } catch (e) {
-                console.error('Interval error:', e);
-                document.getElementById('interval').textContent = 'Error';
-                document.getElementById('interval').classList.add('error');
-            }
-            
-            // Total supply
-            try {
-                const supplyResponse = await fetch('https://blockchain.info/q/totalbc');
-                const supply = await supplyResponse.text();
-                const btcSupply = parseInt(supply) / 1e8;
-                document.getElementById('totalSupply').textContent = (btcSupply / 1e6).toFixed(3) + 'M BTC';
-                document.getElementById('totalSupply').classList.remove('error', 'loading');
-            } catch (e) {
-                console.error('Supply error:', e);
-            }
-            
-            // Mempool size
-            try {
-                const mempoolResponse = await fetch('https://blockchain.info/q/unconfirmedcount');
-                const mempoolCount = await mempoolResponse.text();
-                const count = parseInt(mempoolCount);
-                if (count > 1000) {
-                    document.getElementById('mempoolSize').textContent = (count / 1000).toFixed(1) + 'K txs';
-                } else {
-                    document.getElementById('mempoolSize').textContent = count + ' txs';
-                }
-                document.getElementById('mempoolSize').classList.remove('error', 'loading');
-            } catch (e) {
-                console.error('Mempool error:', e);
-            }
-            
-            // Latest block time
-            try {
-                const blocksResponse = await fetch('https://blockstream.info/api/blocks/0');
-                const blocks = await blocksResponse.json();
-                if (blocks && blocks[0]) {
-                    const blockTime = new Date(blocks[0].timestamp * 1000);
-                    const now = new Date();
-                    const diffMinutes = Math.floor((now - blockTime) / 60000);
-                    
-                    if (diffMinutes < 60) {
-                        document.getElementById('blockTime').textContent = diffMinutes + ' min ago';
-                    } else {
-                        const hours = Math.floor(diffMinutes / 60);
-                        const mins = diffMinutes % 60;
-                        document.getElementById('blockTime').textContent = hours + 'h ' + mins + 'm ago';
-                    }
-                    document.getElementById('blockTime').classList.remove('error', 'loading');
-                }
-            } catch (e) {
-                console.error('Block time error:', e);
-            }
-            
-            // Update timestamp
-            const now = new Date();
-            document.getElementById('lastUpdated').textContent = 
-                'Last updated: ' + now.toLocaleDateString() + ' at ' + now.toLocaleTimeString();
-        }
-        
-        // Initial load
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Page loaded, fetching data...');
-            fetchData();
-            // Refresh every 5 minutes
-            setInterval(fetchData, 5 * 60 * 1000);
+        // Start loading immediately
+        window.addEventListener('DOMContentLoaded', function() {
+            loadPRs();
         });
         
-        // Backup immediate call
-        if (document.readyState === 'complete' || document.readyState === 'interactive') {
-            fetchData();
+        function loadPRs() {
+            // Note: GitHub API has rate limits for unauthenticated requests
+            // For production use, implement proper authentication
+            const url = 'https://api.github.com/repos/btc-mining/miner-firmware/pulls?state=all&base=main&sort=updated&direction=desc&per_page=100';
+            
+            fetch(url, {
+                headers: {
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                allPRs = data;
+                updateStats();
+                displayPRs(data);
+            })
+            .catch(error => {
+                document.getElementById('prs').innerHTML = '<div class="loading">Error: ' + error.message + '</div>';
+            });
+        }
+        
+        function updateStats() {
+            const total = allPRs.length;
+            const open = allPRs.filter(pr => pr.state === 'open').length;
+            const closed = allPRs.filter(pr => pr.state === 'closed' && !pr.merged_at).length;
+            const merged = allPRs.filter(pr => pr.merged_at).length;
+            
+            document.getElementById('stats').innerHTML = 
+                'Total: ' + total + ' | ' +
+                'Open: ' + open + ' (' + Math.round(open/total*100) + '%) | ' +
+                'Closed: ' + closed + ' (' + Math.round(closed/total*100) + '%) | ' +
+                'Merged: ' + merged + ' (' + Math.round(merged/total*100) + '%)';
+        }
+        
+        function filterPRs() {
+            const author = document.getElementById('author').value.toLowerCase();
+            const title = document.getElementById('title').value.toLowerCase();
+            const status = document.getElementById('status').value;
+            
+            const filtered = allPRs.filter(pr => {
+                if (author && !pr.user.login.toLowerCase().includes(author)) return false;
+                if (title && !pr.title.toLowerCase().includes(title)) return false;
+                if (status === 'open' && pr.state !== 'open') return false;
+                if (status === 'closed' && (pr.state !== 'closed' || pr.merged_at)) return false;
+                if (status === 'merged' && !pr.merged_at) return false;
+                return true;
+            });
+            
+            displayPRs(filtered);
+        }
+        
+        function displayPRs(prs) {
+            if (prs.length === 0) {
+                document.getElementById('prs').innerHTML = '<div class="loading">No pull requests found</div>';
+                return;
+            }
+            
+            let html = '';
+            for (let i = 0; i < prs.length; i++) {
+                const pr = prs[i];
+                let status = 'open';
+                let statusText = 'Open';
+                
+                if (pr.merged_at) {
+                    status = 'merged';
+                    statusText = 'Merged';
+                } else if (pr.state === 'closed') {
+                    status = 'closed';
+                    statusText = 'Closed';
+                }
+                
+                html += '<div class="pr-card">' +
+                    '<div class="pr-title">' +
+                    '<a href="' + pr.html_url + '" target="_blank">#' + pr.number + ': ' + pr.title + '</a>' +
+                    '<span class="status-badge ' + status + '">' + statusText + '</span>' +
+                    '</div>' +
+                    '<div class="pr-meta">' +
+                    'by ' + pr.user.login + ' • Created: ' + new Date(pr.created_at).toLocaleDateString() +
+                    ' • Updated: ' + new Date(pr.updated_at).toLocaleDateString() +
+                    '</div>' +
+                    '</div>';
+            }
+            
+            document.getElementById('prs').innerHTML = html;
         }
     </script>
 </body>
