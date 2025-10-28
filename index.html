@@ -87,6 +87,15 @@
         .blocks-red { color: #FF6B6B; }
         .price-green { color: #00E396; }
         .miners-teal { color: #00C2A8; }
+        .energy-yellow { color: #FEB019; }
+        .pool-cyan { color: #00D4FF; }
+        .breakeven-pink { color: #FF69B4; }
+        .time-lime { color: #32CD32; }
+        .fee-orange { color: #FFA500; }
+        .market-purple { color: #8B4789; }
+        .revenue-gold { color: #FFD700; }
+        .next-blue { color: #4169E1; }
+        .mempool-coral { color: #FF7F50; }
         
         .footer {
             background: rgba(255, 255, 255, 0.1);
@@ -113,40 +122,99 @@
         </div>
         
         <div class="stats-grid">
+            <!-- Row 1: Core Metrics -->
             <div class="stat-card">
                 <span class="stat-icon bitcoin-orange">₿</span>
-                <div class="stat-value" id="price">Loading...</div>
+                <div class="stat-value" id="price">$0</div>
                 <div class="stat-label">Bitcoin Price (USD)</div>
             </div>
             
             <div class="stat-card">
                 <span class="stat-icon hash-blue">⚡</span>
-                <div class="stat-value" id="hashrate">Loading...</div>
+                <div class="stat-value" id="hashrate">0 EH/s</div>
                 <div class="stat-label">Network Hash Rate</div>
             </div>
             
             <div class="stat-card">
                 <span class="stat-icon difficulty-purple">🎯</span>
-                <div class="stat-value" id="difficulty">Loading...</div>
+                <div class="stat-value" id="difficulty">0</div>
                 <div class="stat-label">Mining Difficulty</div>
             </div>
             
+            <!-- Row 2: Block Info -->
             <div class="stat-card">
                 <span class="stat-icon blocks-red">🧱</span>
-                <div class="stat-value" id="blockHeight">Loading...</div>
+                <div class="stat-value" id="blockHeight">0</div>
                 <div class="stat-label">Current Block Height</div>
             </div>
             
             <div class="stat-card">
                 <span class="stat-icon miners-teal">🏆</span>
-                <div class="stat-value" id="blockReward">Loading...</div>
+                <div class="stat-value" id="blockReward">0 BTC</div>
                 <div class="stat-label">Block Reward</div>
             </div>
             
             <div class="stat-card">
                 <span class="stat-icon price-green">⏲️</span>
-                <div class="stat-value" id="interval">Loading...</div>
+                <div class="stat-value" id="interval">0s</div>
                 <div class="stat-label">Block Interval</div>
+            </div>
+            
+            <!-- Row 3: Market Metrics -->
+            <div class="stat-card">
+                <span class="stat-icon market-purple">📊</span>
+                <div class="stat-value" id="marketCap">$0B</div>
+                <div class="stat-label">Market Cap</div>
+            </div>
+            
+            <div class="stat-card">
+                <span class="stat-icon fee-orange">💰</span>
+                <div class="stat-value" id="avgFee">0 sat/vB</div>
+                <div class="stat-label">Avg Transaction Fee</div>
+            </div>
+            
+            <div class="stat-card">
+                <span class="stat-icon mempool-coral">📦</span>
+                <div class="stat-value" id="mempoolSize">0 txs</div>
+                <div class="stat-label">Mempool Size</div>
+            </div>
+            
+            <!-- Row 4: Mining Economics -->
+            <div class="stat-card">
+                <span class="stat-icon revenue-gold">💵</span>
+                <div class="stat-value" id="dailyRevenue">$0M</div>
+                <div class="stat-label">Daily Mining Revenue</div>
+            </div>
+            
+            <div class="stat-card">
+                <span class="stat-icon next-blue">📅</span>
+                <div class="stat-value" id="nextAdjustment">0 blocks</div>
+                <div class="stat-label">Next Difficulty Adjustment</div>
+            </div>
+            
+            <div class="stat-card">
+                <span class="stat-icon breakeven-pink">📈</span>
+                <div class="stat-value" id="adjustmentEstimate">0%</div>
+                <div class="stat-label">Adjustment Estimate</div>
+            </div>
+            
+            <!-- Row 5: Additional Stats -->
+            <div class="stat-card">
+                <span class="stat-icon bitcoin-orange">🪙</span>
+                <div class="stat-value" id="totalSupply">0 BTC</div>
+                <div class="stat-label">Total Bitcoin Supply</div>
+            </div>
+            
+            <div class="stat-card">
+                <span class="stat-icon time-lime">⏰</span>
+                <div class="stat-value" id="blockTime">0 min ago</div>
+                <div class="stat-label">Last Block Time</div>
+            </div>
+            
+            <div class="stat-card">
+                <span class="stat-icon pool-cyan">🌐</span>
+                <div class="stat-value" id="nodeCount">~15,000</div>
+                <div class="stat-label">Reachable Nodes</div>
             </div>
         </div>
         
@@ -159,15 +227,21 @@
     </div>
 
     <script>
+        console.log('Dashboard starting...');
+        
         async function fetchData() {
             console.log('Fetching data...');
             
             // Bitcoin price
             try {
-                const priceResponse = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd');
+                const priceResponse = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_market_cap=true');
                 const priceData = await priceResponse.json();
-                document.getElementById('price').textContent = '$' + priceData.bitcoin.usd.toLocaleString();
-                document.getElementById('price').classList.remove('error', 'loading');
+                if (priceData.bitcoin) {
+                    document.getElementById('price').textContent = '$' + priceData.bitcoin.usd.toLocaleString();
+                    document.getElementById('marketCap').textContent = '$' + (priceData.bitcoin.usd_market_cap / 1e9).toFixed(1) + 'B';
+                    document.getElementById('price').classList.remove('error', 'loading');
+                    document.getElementById('marketCap').classList.remove('error', 'loading');
+                }
             } catch (e) {
                 console.error('Price error:', e);
                 document.getElementById('price').textContent = 'Error';
@@ -189,11 +263,39 @@
                 document.getElementById('hashrate').classList.add('error');
             }
             
+            // Difficulty adjustment
+            try {
+                const adjustResponse = await fetch('https://mempool.space/api/v1/difficulty-adjustment');
+                const adjustData = await adjustResponse.json();
+                if (adjustData) {
+                    document.getElementById('nextAdjustment').textContent = '~' + adjustData.remainingBlocks + ' blocks';
+                    const estimate = adjustData.difficultyChange || 0;
+                    const sign = estimate >= 0 ? '+' : '';
+                    document.getElementById('adjustmentEstimate').textContent = sign + estimate.toFixed(2) + '%';
+                    document.getElementById('nextAdjustment').classList.remove('error', 'loading');
+                    document.getElementById('adjustmentEstimate').classList.remove('error', 'loading');
+                }
+            } catch (e) {
+                console.error('Adjustment error:', e);
+            }
+            
+            // Fees
+            try {
+                const feeResponse = await fetch('https://mempool.space/api/v1/fees/recommended');
+                const feeData = await feeResponse.json();
+                if (feeData) {
+                    document.getElementById('avgFee').textContent = feeData.halfHourFee + ' sat/vB';
+                    document.getElementById('avgFee').classList.remove('error', 'loading');
+                }
+            } catch (e) {
+                console.error('Fee error:', e);
+            }
+            
             // Difficulty
             try {
                 const diffResponse = await fetch('https://blockchain.info/q/getdifficulty');
                 const difficulty = await diffResponse.text();
-                document.getElementById('difficulty').textContent = parseFloat(difficulty).toExponential(2);
+                document.getElementById('difficulty').textContent = (parseFloat(difficulty) / 1e12).toFixed(2) + 'T';
                 document.getElementById('difficulty').classList.remove('error', 'loading');
             } catch (e) {
                 console.error('Difficulty error:', e);
@@ -219,6 +321,16 @@
                 const reward = await rewardResponse.text();
                 document.getElementById('blockReward').textContent = reward + ' BTC';
                 document.getElementById('blockReward').classList.remove('error', 'loading');
+                
+                // Calculate daily revenue
+                const priceText = document.getElementById('price').textContent;
+                if (priceText && !priceText.includes('Error')) {
+                    const price = parseFloat(priceText.replace(/[^0-9.]/g, ''));
+                    const dailyBtc = parseFloat(reward) * 144;
+                    const dailyUsd = price * dailyBtc;
+                    document.getElementById('dailyRevenue').textContent = '$' + (dailyUsd / 1e6).toFixed(2) + 'M';
+                    document.getElementById('dailyRevenue').classList.remove('error', 'loading');
+                }
             } catch (e) {
                 console.error('Block reward error:', e);
                 document.getElementById('blockReward').textContent = 'Error';
@@ -235,6 +347,54 @@
                 console.error('Interval error:', e);
                 document.getElementById('interval').textContent = 'Error';
                 document.getElementById('interval').classList.add('error');
+            }
+            
+            // Total supply
+            try {
+                const supplyResponse = await fetch('https://blockchain.info/q/totalbc');
+                const supply = await supplyResponse.text();
+                const btcSupply = parseInt(supply) / 1e8;
+                document.getElementById('totalSupply').textContent = (btcSupply / 1e6).toFixed(3) + 'M BTC';
+                document.getElementById('totalSupply').classList.remove('error', 'loading');
+            } catch (e) {
+                console.error('Supply error:', e);
+            }
+            
+            // Mempool size
+            try {
+                const mempoolResponse = await fetch('https://blockchain.info/q/unconfirmedcount');
+                const mempoolCount = await mempoolResponse.text();
+                const count = parseInt(mempoolCount);
+                if (count > 1000) {
+                    document.getElementById('mempoolSize').textContent = (count / 1000).toFixed(1) + 'K txs';
+                } else {
+                    document.getElementById('mempoolSize').textContent = count + ' txs';
+                }
+                document.getElementById('mempoolSize').classList.remove('error', 'loading');
+            } catch (e) {
+                console.error('Mempool error:', e);
+            }
+            
+            // Latest block time
+            try {
+                const blocksResponse = await fetch('https://blockstream.info/api/blocks/0');
+                const blocks = await blocksResponse.json();
+                if (blocks && blocks[0]) {
+                    const blockTime = new Date(blocks[0].timestamp * 1000);
+                    const now = new Date();
+                    const diffMinutes = Math.floor((now - blockTime) / 60000);
+                    
+                    if (diffMinutes < 60) {
+                        document.getElementById('blockTime').textContent = diffMinutes + ' min ago';
+                    } else {
+                        const hours = Math.floor(diffMinutes / 60);
+                        const mins = diffMinutes % 60;
+                        document.getElementById('blockTime').textContent = hours + 'h ' + mins + 'm ago';
+                    }
+                    document.getElementById('blockTime').classList.remove('error', 'loading');
+                }
+            } catch (e) {
+                console.error('Block time error:', e);
             }
             
             // Update timestamp
