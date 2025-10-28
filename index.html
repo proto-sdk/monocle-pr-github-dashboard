@@ -1,324 +1,260 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Proto API PR Dashboard</title>
     <meta charset="UTF-8">
-    <link rel="icon" type="image/png" href="assets/images/proto_logo.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bitcoin Network Statistics</title>
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #000;
-            color: #fff;
+        * {
             margin: 0;
-            padding: 20px;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
+        
+        body {
+            background: #000000;
+            min-height: 100vh;
+            padding: 40px 20px;
+            color: white;
+        }
+        
         .container {
             max-width: 1400px;
             margin: 0 auto;
         }
+        
         .header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #333;
-            margin-bottom: 30px;
+            text-align: center;
+            margin-bottom: 40px;
         }
-        .logo-section {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        .proto-logo {
-            width: 40px;
-            height: 40px;
-        }
-        h1 {
-            color: #FF6B35;
-            font-size: 28px;
-            margin: 0;
-        }
-        .controls {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-        .refresh-btn {
-            background: #FF6B35;
+        
+        .header h1 {
             color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        .refresh-btn:hover {
-            background: #FF8C42;
-        }
-        .timer {
-            color: #FF6B35;
-            font-family: monospace;
-            padding: 8px 12px;
-            border: 1px solid #FF6B35;
-            border-radius: 4px;
-            background: rgba(255,107,53,0.1);
-        }
-        .filters {
-            background: #0a0a0a;
-            padding: 20px;
-            border-radius: 8px;
-            border: 1px solid #222;
-            margin-bottom: 25px;
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-        .filter-input {
-            background: #1a1a1a;
-            color: white;
-            border: 1px solid #333;
-            padding: 10px 14px;
-            border-radius: 6px;
-            width: 200px;
-        }
-        .filter-input:focus {
-            outline: none;
-            border-color: #FF6B35;
-        }
-        .stats {
-            margin-left: auto;
-            padding: 10px 16px;
-            background: rgba(255,107,53,0.1);
-            border: 1px solid #FF6B35;
-            border-radius: 6px;
-            display: flex;
-            gap: 20px;
-            font-size: 13px;
-        }
-        .stat {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            display: inline-block;
-        }
-        .pr-card {
-            background: linear-gradient(135deg, #0a0a0a, #111);
-            border: 1px solid #222;
-            border-radius: 8px;
-            padding: 18px;
-            margin-bottom: 14px;
-            transition: all 0.3s;
-        }
-        .pr-card:hover {
-            border-color: #FF6B35;
-            transform: translateX(2px);
-        }
-        .pr-header {
-            display: flex;
-            justify-content: space-between;
+            font-size: 48px;
+            font-weight: 700;
             margin-bottom: 10px;
         }
-        .pr-title a {
-            color: white;
-            text-decoration: none;
-            font-size: 16px;
+        
+        .header p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 18px;
         }
-        .pr-title a:hover {
-            color: #FF6B35;
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 60px;
         }
-        .status-badge {
-            padding: 5px 10px;
-            border-radius: 12px;
-            font-size: 11px;
+        
+        .stat-card {
+            background: #1a1a1a;
+            border: 2px solid #FF6B35;
+            border-radius: 16px;
+            padding: 28px;
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(255, 107, 53, 0.15);
+            border-color: #FF8C42;
+        }
+        
+        .stat-icon {
+            font-size: 32px;
+            margin-bottom: 16px;
+            display: inline-block;
+        }
+        
+        .stat-value {
+            font-size: 28px;
             font-weight: 600;
-            color: white;
-            text-transform: uppercase;
+            margin-bottom: 8px;
+            color: #ffffff;
         }
-        .open { background: #2ea44f; }
-        .closed { background: #cb2431; }
-        .merged { background: #6f42c1; }
-        .pr-meta {
-            color: #999;
-            font-size: 13px;
+        
+        .stat-label {
+            font-size: 14px;
+            color: #999999;
+            font-weight: 500;
         }
-        .loading {
+        
+        .bitcoin-orange { color: #f7931a; }
+        .hash-blue { color: #0077FF; }
+        .difficulty-purple { color: #9B51E0; }
+        .blocks-red { color: #FF6B6B; }
+        .price-green { color: #00E396; }
+        .miners-teal { color: #00C2A8; }
+        
+        .footer {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 24px;
             text-align: center;
-            padding: 60px;
-            color: #666;
+            color: white;
+        }
+        
+        .loading {
+            opacity: 0.6;
+        }
+        
+        .error {
+            color: #FF6B6B !important;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <div class="logo-section">
-                <img src="assets/images/proto_logo.png" alt="Proto" class="proto-logo">
-                <h1>Proto API PR Dashboard</h1>
+            <h1>⚡ Bitcoin Network Statistics</h1>
+            <p>Real-time blockchain metrics and mining profitability data</p>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-icon bitcoin-orange">₿</span>
+                <div class="stat-value" id="price">Loading...</div>
+                <div class="stat-label">Bitcoin Price (USD)</div>
             </div>
-            <div class="controls">
-                <button class="refresh-btn" onclick="loadPRs()">Refresh</button>
-                <div class="timer" id="timer">15:00</div>
+            
+            <div class="stat-card">
+                <span class="stat-icon hash-blue">⚡</span>
+                <div class="stat-value" id="hashrate">Loading...</div>
+                <div class="stat-label">Network Hash Rate</div>
+            </div>
+            
+            <div class="stat-card">
+                <span class="stat-icon difficulty-purple">🎯</span>
+                <div class="stat-value" id="difficulty">Loading...</div>
+                <div class="stat-label">Mining Difficulty</div>
+            </div>
+            
+            <div class="stat-card">
+                <span class="stat-icon blocks-red">🧱</span>
+                <div class="stat-value" id="blockHeight">Loading...</div>
+                <div class="stat-label">Current Block Height</div>
+            </div>
+            
+            <div class="stat-card">
+                <span class="stat-icon miners-teal">🏆</span>
+                <div class="stat-value" id="blockReward">Loading...</div>
+                <div class="stat-label">Block Reward</div>
+            </div>
+            
+            <div class="stat-card">
+                <span class="stat-icon price-green">⏲️</span>
+                <div class="stat-value" id="interval">Loading...</div>
+                <div class="stat-label">Block Interval</div>
             </div>
         </div>
         
-        <div class="filters">
-            <input type="text" id="author" class="filter-input" placeholder="Filter by author" onkeyup="applyFilters()">
-            <input type="text" id="title" class="filter-input" placeholder="Filter by title" onkeyup="applyFilters()">
-            <select id="status" class="filter-input" onchange="applyFilters()">
-                <option value="">All PRs</option>
-                <option value="open">Open</option>
-                <option value="closed">Closed</option>
-                <option value="merged">Merged</option>
-            </select>
-            <div class="stats">
-                <div class="stat">
-                    <span class="dot" style="background:#2ea44f"></span>
-                    <span id="open-stat">Open: 0%</span>
-                </div>
-                <div class="stat">
-                    <span class="dot" style="background:#cb2431"></span>
-                    <span id="closed-stat">Closed: 0%</span>
-                </div>
-                <div class="stat">
-                    <span class="dot" style="background:#6f42c1"></span>
-                    <span id="merged-stat">Merged: 0%</span>
-                </div>
-            </div>
-        </div>
-        
-        <div id="prs">
-            <div class="loading">Loading pull requests...</div>
+        <div class="footer">
+            <p id="lastUpdated">Loading...</p>
+            <p style="margin-top: 10px; font-size: 12px; opacity: 0.7;">
+                Data sources: CoinGecko | Mempool.space | Blockchain.info | Blockstream
+            </p>
         </div>
     </div>
 
     <script>
-        let allPRs = [];
-        let timerInterval;
-        let timeLeft = 900; // 15 minutes in seconds
-        
-        // Token management - will be replaced with environment variable in production
-        function getToken() {
-            // This will be replaced with environment variable or config in production
-            // For GitHub Pages, use GitHub Actions to inject token
-            return 'YOUR_GITHUB_TOKEN_HERE';
-        }
-        
-        function updateTimer() {
-            const mins = Math.floor(timeLeft / 60);
-            const secs = timeLeft % 60;
-            document.getElementById('timer').textContent = 
-                mins.toString().padStart(2, '0') + ':' + secs.toString().padStart(2, '0');
+        async function fetchData() {
+            console.log('Fetching data...');
             
-            if (timeLeft <= 0) {
-                loadPRs();
-                timeLeft = 900;
-            } else {
-                timeLeft--;
-            }
-        }
-        
-        function startTimer() {
-            if (timerInterval) clearInterval(timerInterval);
-            timeLeft = 900;
-            timerInterval = setInterval(updateTimer, 1000);
-        }
-        
-        function loadPRs() {
-            const container = document.getElementById('prs');
-            container.innerHTML = '<div class="loading">Loading pull requests...</div>';
-            
-            fetch('https://api.github.com/repos/btc-mining/miner-firmware/pulls?state=all&base=main&sort=updated&direction=desc&per_page=100', {
-                headers: {
-                    'Authorization': 'Bearer ' + getToken(),
-                    'Accept': 'application/vnd.github.v3+json'
-                }
-            })
-            .then(r => r.json())
-            .then(data => {
-                allPRs = data;
-                updateStats();
-                applyFilters();
-                startTimer();
-            })
-            .catch(err => {
-                container.innerHTML = '<div class="loading">Error loading PRs: ' + err.message + '</div>';
-            });
-        }
-        
-        function updateStats() {
-            const total = allPRs.length;
-            if (total === 0) return;
-            
-            const open = allPRs.filter(pr => pr.state === 'open').length;
-            const closed = allPRs.filter(pr => pr.state === 'closed' && !pr.merged_at).length;
-            const merged = allPRs.filter(pr => pr.merged_at).length;
-            
-            document.getElementById('open-stat').textContent = 'Open: ' + Math.round(open/total*100) + '%';
-            document.getElementById('closed-stat').textContent = 'Closed: ' + Math.round(closed/total*100) + '%';
-            document.getElementById('merged-stat').textContent = 'Merged: ' + Math.round(merged/total*100) + '%';
-        }
-        
-        function applyFilters() {
-            const author = document.getElementById('author').value.toLowerCase();
-            const title = document.getElementById('title').value.toLowerCase();
-            const status = document.getElementById('status').value;
-            
-            let filtered = allPRs.filter(pr => {
-                if (author && !pr.user.login.toLowerCase().includes(author)) return false;
-                if (title && !pr.title.toLowerCase().includes(title)) return false;
-                if (status) {
-                    if (status === 'open' && pr.state !== 'open') return false;
-                    if (status === 'closed' && (pr.state !== 'closed' || pr.merged_at)) return false;
-                    if (status === 'merged' && !pr.merged_at) return false;
-                }
-                return true;
-            });
-            
-            displayPRs(filtered);
-        }
-        
-        function displayPRs(prs) {
-            const container = document.getElementById('prs');
-            
-            if (prs.length === 0) {
-                container.innerHTML = '<div class="loading">No pull requests found</div>';
-                return;
+            // Bitcoin price
+            try {
+                const priceResponse = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd');
+                const priceData = await priceResponse.json();
+                document.getElementById('price').textContent = '$' + priceData.bitcoin.usd.toLocaleString();
+                document.getElementById('price').classList.remove('error', 'loading');
+            } catch (e) {
+                console.error('Price error:', e);
+                document.getElementById('price').textContent = 'Error';
+                document.getElementById('price').classList.add('error');
             }
             
-            container.innerHTML = prs.map(pr => {
-                let status = 'open';
-                let statusText = 'Open';
-                if (pr.merged_at) {
-                    status = 'merged';
-                    statusText = 'Merged';
-                } else if (pr.state === 'closed') {
-                    status = 'closed';
-                    statusText = 'Closed';
+            // Hashrate
+            try {
+                const hashResponse = await fetch('https://mempool.space/api/v1/mining/hashrate/3d');
+                const hashData = await hashResponse.json();
+                if (hashData && hashData.currentHashrate) {
+                    const hashrateInEH = hashData.currentHashrate / 1e18;
+                    document.getElementById('hashrate').textContent = hashrateInEH.toFixed(2) + ' EH/s';
+                    document.getElementById('hashrate').classList.remove('error', 'loading');
                 }
-                
-                return '<div class="pr-card">' +
-                    '<div class="pr-header">' +
-                    '<div class="pr-title">' +
-                    '<a href="' + pr.html_url + '" target="_blank">#' + pr.number + ': ' + pr.title + '</a>' +
-                    '</div>' +
-                    '<span class="status-badge ' + status + '">' + statusText + '</span>' +
-                    '</div>' +
-                    '<div class="pr-meta">' +
-                    'by ' + pr.user.login + ' • Created: ' + new Date(pr.created_at).toLocaleDateString() +
-                    ' • Updated: ' + new Date(pr.updated_at).toLocaleDateString() +
-                    '</div>' +
-                    '</div>';
-            }).join('');
+            } catch (e) {
+                console.error('Hashrate error:', e);
+                document.getElementById('hashrate').textContent = 'N/A';
+                document.getElementById('hashrate').classList.add('error');
+            }
+            
+            // Difficulty
+            try {
+                const diffResponse = await fetch('https://blockchain.info/q/getdifficulty');
+                const difficulty = await diffResponse.text();
+                document.getElementById('difficulty').textContent = parseFloat(difficulty).toExponential(2);
+                document.getElementById('difficulty').classList.remove('error', 'loading');
+            } catch (e) {
+                console.error('Difficulty error:', e);
+                document.getElementById('difficulty').textContent = 'Error';
+                document.getElementById('difficulty').classList.add('error');
+            }
+            
+            // Block height
+            try {
+                const blockResponse = await fetch('https://blockstream.info/api/blocks/tip/height');
+                const blockHeight = await blockResponse.text();
+                document.getElementById('blockHeight').textContent = parseInt(blockHeight).toLocaleString();
+                document.getElementById('blockHeight').classList.remove('error', 'loading');
+            } catch (e) {
+                console.error('Block height error:', e);
+                document.getElementById('blockHeight').textContent = 'Error';
+                document.getElementById('blockHeight').classList.add('error');
+            }
+            
+            // Block reward
+            try {
+                const rewardResponse = await fetch('https://blockchain.info/q/bcperblock');
+                const reward = await rewardResponse.text();
+                document.getElementById('blockReward').textContent = reward + ' BTC';
+                document.getElementById('blockReward').classList.remove('error', 'loading');
+            } catch (e) {
+                console.error('Block reward error:', e);
+                document.getElementById('blockReward').textContent = 'Error';
+                document.getElementById('blockReward').classList.add('error');
+            }
+            
+            // Interval
+            try {
+                const intervalResponse = await fetch('https://blockchain.info/q/interval');
+                const interval = await intervalResponse.text();
+                document.getElementById('interval').textContent = interval + 's';
+                document.getElementById('interval').classList.remove('error', 'loading');
+            } catch (e) {
+                console.error('Interval error:', e);
+                document.getElementById('interval').textContent = 'Error';
+                document.getElementById('interval').classList.add('error');
+            }
+            
+            // Update timestamp
+            const now = new Date();
+            document.getElementById('lastUpdated').textContent = 
+                'Last updated: ' + now.toLocaleDateString() + ' at ' + now.toLocaleTimeString();
         }
         
-        // Load on start
-        loadPRs();
+        // Initial load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded, fetching data...');
+            fetchData();
+            // Refresh every 5 minutes
+            setInterval(fetchData, 5 * 60 * 1000);
+        });
+        
+        // Backup immediate call
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            fetchData();
+        }
     </script>
 </body>
 </html>
