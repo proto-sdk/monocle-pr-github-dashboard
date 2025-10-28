@@ -1,24 +1,11 @@
-# Proto GitHub Dashboard
+# Monocle PR GitHub Dashboard
 
-A secure, SSO-protected dashboard that combines Bitcoin network statistics with GitHub PR tracking functionality. The dashboard features a clean, modern interface with a dark theme and real-time data updates.
-
-## Security
-
-- **GitHub OAuth Integration**
-  - Secure Single Sign-On (SSO) through GitHub
-  - Required authentication for all dashboard access
-  - Proper token handling and secure storage
-  - Automatic session management
+A clean, professional GitHub Pull Request dashboard for tracking PRs from the btc-mining/miner-firmware repository. Features a light theme interface with real-time data updates and comprehensive filtering capabilities.
 
 ## Features
 
-- **Bitcoin Statistics**
-  - Current Bitcoin Price (via CoinGecko API)
-  - Network Hash Rate (via mempool.space API)
-  - Block Height (via Blockstream API)
-  - Auto-refreshes every 5 minutes
-
 - **GitHub PR Tracking**
+  - Real-time tracking of pull requests from btc-mining/miner-firmware repository
   - Color-coded PR status labels
     - Green: Open PRs
     - Red: Closed PRs
@@ -26,66 +13,78 @@ A secure, SSO-protected dashboard that combines Bitcoin network statistics with 
   - PR Statistics Display
     - Percentage breakdown of PR statuses
     - Visual indicators with matching status colors
+  - Advanced Filtering
+    - Filter by author
+    - Filter by title
+    - Filter by status (Open/Closed/Merged)
   - Clean separation of PR titles and status indicators
+  - 15-minute auto-refresh timer with countdown display
 
 ## Design
 
-- Modern black background (#000000) for optimal contrast
-- Unified card styling with consistent orange theme
+- Professional light theme with clean white background (#f6f8fa)
+- White PR cards with subtle borders
+- GitHub-style UI design
 - Responsive layout with clean visual hierarchy
-- Block logo favicon for browser identification
+- Optimized for readability and professional use
 
 ## Technical Details
 
 - Pure HTML and inline styles for maximum reliability
 - Minimal JavaScript for core functionality
-- Secure API Integrations:
-  - GitHub OAuth for authentication
-  - CoinGecko API for Bitcoin price
-  - mempool.space API for network hash rate
-  - Blockstream API for block height
-  - GitHub API for PR data (authenticated access)
+- GitHub API Integration:
+  - Supports both authenticated and unauthenticated access
+  - GitHub Personal Access Token (PAT) for higher rate limits
+  - Fetches last 100 PRs from the repository
+  - Real-time data updates
 
 ## Setup
 
-1. Configure OAuth:
-   - Set up GitHub OAuth application
-   - Update `clientId` in index-secure.html
-   - Configure `redirectUri` for your deployment
-   - Set up backend endpoint for OAuth callback handling
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/proto-sdk/monocle-pr-github-dashboard.git
+   cd monocle-pr-github-dashboard
+   ```
 
-2. Backend Requirements:
-   - Endpoint for handling OAuth callback: `/auth/github/callback`
-   - Token exchange implementation
-   - Proper CORS and security headers
+2. **Add GitHub Personal Access Token (Optional but recommended):**
+   - Generate a PAT from GitHub Settings > Developer settings > Personal access tokens
+   - Enter the token in the dashboard's token input field
+   - Token is saved securely in browser's localStorage
 
 ## Usage
 
-1. Access the dashboard URL
-2. Log in with GitHub credentials
-3. Upon successful authentication:
-   - Dashboard will load initial data
-   - Display current Bitcoin network statistics
-   - Show PR status information
-   - Auto-refresh every 5 minutes
+1. Open the dashboard in your browser:
+   - Local: `file:///path/to/monocle-pr-github-dashboard/index.html`
+   - Or serve via HTTP server: `python3 -m http.server 8000`
+
+2. Enter your GitHub Personal Access Token (optional):
+   - Without token: 60 API requests/hour limit
+   - With token: 5000 API requests/hour limit
+
+3. Click "Refresh" to load pull requests
+
+4. Use filters to find specific PRs:
+   - Filter by author username
+   - Filter by PR title keywords
+   - Filter by status (Open/Closed/Merged)
+
+5. Dashboard auto-refreshes every 15 minutes
 
 ## Deployment
 
-The dashboard is deployed using GitHub Pages and requires:
-1. Proper OAuth configuration
-2. Backend service for handling authentication
-3. HTTPS endpoint for secure token exchange
-4. Appropriate CORS settings
+The dashboard can be deployed using GitHub Pages:
+1. Enable GitHub Pages in repository settings
+2. Select source branch (main) and folder (root)
+3. Access via: `https://[username].github.io/monocle-pr-github-dashboard/`
 
 ## Development
 
 To modify the dashboard:
 1. Clone the repository
-2. Set up OAuth credentials
-3. Configure backend services
-4. Test locally with proper security measures
-5. Commit and push changes
-6. GitHub Pages will automatically update
+2. Make changes to `index.html`
+3. Test locally by opening the file in a browser
+4. Commit and push changes
+5. GitHub Pages will automatically update
 
 ## Browser Compatibility
 
