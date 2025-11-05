@@ -368,7 +368,6 @@
         <h1>Monocle PR Dashboard</h1>
         <p class="header-description">Real-time Pull Request Tracking for btc-mining/miner-firmware</p>
         <div class="header-info">
-            <span class="version">v1.0.0</span>
             <span id="pr-count" class="version" style="background-color: var(--success-color);">0 PRs</span>
         </div>
     </header>
@@ -985,43 +984,21 @@
             updateVersionBadge(newVersion, true);
         };
         
-        // Initialize badge on load - fetch and display current version
+        // Initialize badge on load - Show v1.6.0 as NEW (green, clickable)
         window.addEventListener('DOMContentLoaded', () => {
             // Create badge immediately
             createVersionBadge();
             
-            setTimeout(async () => {
-                // Try to get stored version first
-                let currentVersion = localStorage.getItem(STORAGE_KEY);
+            setTimeout(() => {
+                // Set current version to 1.6.0
+                const currentVersion = '1.6.0';
                 
-                // If no stored version, fetch it now
-                if (!currentVersion || currentVersion === 'unknown') {
-                    try {
-                        const response = await fetch(PROTO_API_URL);
-                        if (response.ok) {
-                            const data = await response.json();
-                            currentVersion = data.info?.version || data.version || data.openapi || null;
-                            if (currentVersion) {
-                                localStorage.setItem(STORAGE_KEY, currentVersion);
-                            }
-                        }
-                    } catch (error) {
-                        console.error('[Version Badge] Failed to fetch initial version:', error);
-                        // Use fallback version
-                        currentVersion = '1.6.0';
-                        localStorage.setItem(STORAGE_KEY, currentVersion);
-                    }
-                }
+                // Store as current version
+                localStorage.setItem(STORAGE_KEY, currentVersion);
                 
-                // If still no version, use fallback
-                if (!currentVersion || currentVersion === 'unknown') {
-                    currentVersion = '1.6.0';
-                    localStorage.setItem(STORAGE_KEY, currentVersion);
-                }
-                
-                // Display current version in grey (not new)
-                console.log('[Version Badge] Displaying current version:', currentVersion);
-                updateVersionBadge(currentVersion, false);
+                // Display as NEW version (green, clickable)
+                console.log('[Version Badge] Displaying version as NEW:', currentVersion);
+                updateVersionBadge(currentVersion, true);
             }, 500);
         });
 
