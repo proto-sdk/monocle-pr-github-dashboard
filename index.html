@@ -325,6 +325,42 @@
         .refreshing .refresh-icon {
             animation: spin 1s linear infinite;
         }
+    
+/* Proto API Version Badge - Matches existing .version badge style */
+        .api-version-badge {
+            display: inline-block;
+            background-color: #666666;
+            padding: 0.25rem 1rem;
+            border-radius: 20px;
+            font-size: 1rem;
+            color: white;
+            transition: all 0.3s ease;
+            cursor: default;
+        }
+        
+        .api-version-badge:hover {
+            opacity: 0.9;
+        }
+        
+        .api-version-badge.new-version {
+            background-color: var(--success-color);
+            animation: versionPulse 2s infinite;
+            cursor: pointer;
+        }
+        
+        .api-version-badge.new-version:hover {
+            opacity: 0.85;
+            transform: translateY(-1px);
+        }
+        
+        .api-version-badge.new-version:active {
+            transform: translateY(0);
+        }
+        
+        @keyframes versionPulse {
+            0%, 100% {
+                opacity: 1;
+            }
     </style>
 </head>
 <body>
@@ -670,6 +706,326 @@
                 prList.innerHTML = `<div class="error">Error: ${error.message}</div>`;
             }
         }
+    </script>
+
+    <script>
+// Proto API Version Monitor - DEMO VERSION
+        const PROTO_API_URL = 'https://raw.githubusercontent.com/btc-mining/proto-api/main/mdk/MDK-API.json';
+        const CHECK_INTERVAL = 300000; // 5 minutes (300 seconds)
+        const STORAGE_KEY = 'proto_api_version';
+        
+        let checkCount = 0;
+        
+        async function checkProtoAPIVersion() {
+            checkCount++;
+            updateMonitorStatus('Checking...', true);
+            
+            try {
+                const response = await fetch(PROTO_API_URL);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Try to find version in common locations
+                const currentVersion = data.info?.version || 
+                                     data.version || 
+                                     data.openapi || 
+                                     '1.6.0'; // Demo default
+                
+                console.log(`[Version Monitor] Check #${checkCount}: Current version = ${currentVersion}`);
+                
+                // Get stored version
+                const storedVersion = localStorage.getItem(STORAGE_KEY);
+                
+                if (storedVersion && storedVersion !== currentVersion && currentVersion !== 'unknown') {
+                    console.log(`[Version Monitor] VERSION CHANGE DETECTED: ${storedVersion} → ${currentVersion}`);
+                    
+                    // Check if this version was already acknowledged
+                    const acknowledged = localStorage.getItem('version_acknowledged');
+                    if (acknowledged !== currentVersion) {
+                        showVersionAlert(storedVersion, currentVersion);
+                    } else {
+                        console.log(`[Version Monitor] Version ${currentVersion} already acknowledged`);
+                    }
+                } else if (!storedVersion) {
+                    console.log(`[Version Monitor] First check - storing version: ${currentVersion}`);
+                    localStorage.setItem(STORAGE_KEY, currentVersion);
+                    updateVersionBadge(currentVersion, false);
+                }
+                
+                // Store current version
+                if (currentVersion !== 'unknown') {
+                    localStorage.setItem(STORAGE_KEY, currentVersion);
+                }
+                
+                updateMonitorStatus(`Last checked: ${new Date().toLocaleTimeString()}`, false);
+                
+                // Update badge with current version
+                const displayVersion = localStorage.getItem(STORAGE_KEY);
+                if (displayVersion && displayVersion !== 'unknown') {
+                    const isNew = document.querySelector('.version-alert') !== null;
+                    updateVersionBadge(displayVersion, isNew);
+                }
+                
+            } catch (error) {
+                console.error('[Version Monitor] Error checking version:', error);
+                updateMonitorStatus(`Error: ${error.message}`, false);
+                
+                // For demo, use default version on error
+                const storedVersion = localStorage.getItem(STORAGE_KEY);
+                if (!storedVersion || storedVersion === 'unknown') {
+                    localStorage.setItem(STORAGE_KEY, '1.6.0');
+                    updateVersionBadge('1.6.0', false);
+                }
+            }
+        }
+        
+        function showVersionAlert(oldVersion, newVersion) {
+            // Check if already acknowledged
+            const acknowledged = localStorage.getItem('version_acknowledged');
+            if (acknowledged === newVersion) {
+                console.log('[Version Alert] Version already acknowledged, skipping alert');
+                return;
+            }
+            
+            // Remove any existing alert
+            const existingAlert = document.querySelector('.version-alert');
+            if (existingAlert) {
+                existingAlert.remove();
+            }
+            
+            // Create new alert
+            const alert = document.createElement('div');
+            alert.className = 'version-alert';
+            alert.innerHTML = `
+                <div class="version-alert-content">
+                    <span class="version-alert-icon">🚀</span>
+                    <span>Proto API Version Updated:</span>
+                    <span class="version-badge">${oldVersion}</span>
+                    <span>→</span>
+                    <span class="version-badge">${newVersion}</span>
+                </div>
+                <button onclick="dismissVersionAlert()">Dismiss</button>
+                <button onclick="acknowledgeNewVersion('${newVersion}')">View API Docs & Acknowledge</button>
+            `;
+            
+            document.body.prepend(alert);
+            
+            // Auto-dismiss after 30 seconds
+            setTimeout(() => {
+                if (alert.parentElement) {
+                    alert.style.animation = 'slideDown 0.4s ease reverse';
+                    setTimeout(() => alert.remove(), 400);
+                }
+            }, 30000);
+        }
+        
+        function dismissVersionAlert() {
+            const alert = document.querySelector('.version-alert');
+            if (alert) {
+                alert.style.animation = 'slideDown 0.4s ease reverse';
+                setTimeout(() => alert.remove(), 400);
+            }
+        }
+        
+        function updateMonitorStatus(message, isChecking) {
+            let statusDiv = document.querySelector('.version-monitor-status');
+            if (!statusDiv) {
+                statusDiv = document.createElement('div');
+                statusDiv.className = 'version-monitor-status';
+                document.body.appendChild(statusDiv);
+            }
+            
+            statusDiv.className = isChecking ? 'version-monitor-status checking' : 'version-monitor-status';
+            statusDiv.innerHTML = `
+                <span class="status-dot"></span>
+                <span>Version Monitor: ${message}</span>
+            `;
+        }
+        
+        // Initialize version monitoring
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('[Version Monitor] DEMO MODE - Initializing...');
+            console.log('[Version Monitor] Checking every 30 seconds (demo interval)');
+            console.log('[Version Monitor] To simulate a version change, open DevTools and run:');
+            console.log('  localStorage.setItem("proto_api_version", "1.0.0")');
+            console.log('  Then wait for next check cycle');
+            
+            updateMonitorStatus('Initializing...', false);
+            
+            // Initial check
+            checkProtoAPIVersion();
+            
+            // Set up periodic checks
+            setInterval(checkProtoAPIVersion, CHECK_INTERVAL);
+        });
+        
+        // Add demo controls
+        window.simulateVersionChange = function() {
+            const currentVersion = localStorage.getItem(STORAGE_KEY) || '1.0.0';
+            const newVersion = prompt('Enter new version to simulate:', '2.0.0');
+            if (newVersion) {
+                showVersionAlert(currentVersion, newVersion);
+                localStorage.setItem(STORAGE_KEY, newVersion);
+            }
+        };
+        
+        window.resetVersionMonitor = function() {
+            localStorage.removeItem(STORAGE_KEY);
+            console.log('[Version Monitor] Reset complete. Next check will store new baseline.');
+            updateMonitorStatus('Reset - waiting for next check', false);
+        };
+        
+
+        // Create and manage version badge
+        function createVersionBadge() {
+            // Find the PR count badge
+            const prCountBadge = document.getElementById('pr-count');
+            if (!prCountBadge) {
+                console.warn('[Version Badge] PR count badge not found');
+                return;
+            }
+            
+            // Create the badge (as a span to match existing badge style)
+            const badge = document.createElement('span');
+            badge.className = 'api-version-badge version';
+            badge.id = 'api-version-badge';
+            badge.innerHTML = `API Version Check`;
+            
+            // Insert right after the PR count badge
+            prCountBadge.parentNode.insertBefore(badge, prCountBadge.nextSibling);
+            
+            return badge;
+        }
+        
+        function updateVersionBadge(version, isNew = false) {
+            let badge = document.getElementById('api-version-badge');
+            if (!badge) {
+                badge = createVersionBadge();
+            }
+            
+            if (badge) {
+                // Don't display if version is unknown
+                if (!version || version === 'unknown' || version === 'Unknown' || version === 'Checking...') {
+                    badge.textContent = 'API Version Check';
+                    badge.classList.remove('new-version');
+                    badge.title = '';
+                    badge.onclick = null;
+                    return;
+                }
+                
+                if (isNew) {
+                    // New version detected - turn GREEN and show "API Version X.X.X"
+                    badge.classList.add('new-version');
+                    badge.innerHTML = `API Version ${version} <span style="background: #ff0000; padding: 2px 6px; border-radius: 10px; font-size: 0.75rem; margin-left: 6px;">NEW</span>`;
+                    badge.title = 'Click to acknowledge and view API specification';
+                    
+                    // Add click handler to acknowledge and open API docs
+                    badge.onclick = function() {
+                        acknowledgeNewVersion(version);
+                    };
+                } else {
+                    // Current version - stay GREY and show "API Version X.X.X"
+                    badge.classList.remove('new-version');
+                    badge.textContent = `API Version ${version}`;
+                    badge.title = 'Current API version';
+                    badge.onclick = null;
+                }
+            }
+        }
+        
+        function acknowledgeNewVersion(version) {
+            console.log('[Version Badge] User acknowledged version:', version);
+            
+            // Store acknowledgment
+            localStorage.setItem('version_acknowledged', version);
+            localStorage.setItem('version_acknowledged_timestamp', Date.now());
+            
+            // Remove NEW indicator
+            const badge = document.getElementById('api-version-badge');
+            if (badge) {
+                badge.classList.remove('new-version');
+                badge.innerHTML = `API Version ${version}`;
+                badge.title = 'Current API version (acknowledged)';
+                badge.onclick = null;
+                badge.style.cursor = 'default';
+            }
+            
+            // Dismiss alert banner if present
+            const alert = document.querySelector('.version-alert');
+            if (alert) {
+                alert.style.animation = 'slideDown 0.4s ease reverse';
+                setTimeout(() => alert.remove(), 400);
+            }
+            
+            // Open API specification file in new tab
+            window.open('https://github.com/btc-mining/proto-api/blob/main/mdk/MDK-API.json', '_blank');
+            
+            // Show confirmation
+            console.log('[Version Badge] ✅ Version acknowledged, opening API documentation');
+        }
+        
+        // Modify the existing checkProtoAPIVersion function to update badge
+        const originalCheckFunction = window.checkProtoAPIVersion;
+        window.checkProtoAPIVersion = async function() {
+            await originalCheckFunction();
+            
+            // Update badge with current version
+            const currentVersion = localStorage.getItem(STORAGE_KEY) || 'Unknown';
+            const isNew = document.querySelector('.version-alert') !== null;
+            updateVersionBadge(currentVersion, isNew);
+        };
+        
+        // Modify showVersionAlert to mark badge as new
+        const originalShowAlert = window.showVersionAlert;
+        window.showVersionAlert = function(oldVersion, newVersion) {
+            originalShowAlert(oldVersion, newVersion);
+            updateVersionBadge(newVersion, true);
+        };
+        
+        // Initialize badge on load - fetch and display current version
+        window.addEventListener('DOMContentLoaded', () => {
+            // Create badge immediately
+            createVersionBadge();
+            
+            setTimeout(async () => {
+                // Try to get stored version first
+                let currentVersion = localStorage.getItem(STORAGE_KEY);
+                
+                // If no stored version, fetch it now
+                if (!currentVersion || currentVersion === 'unknown') {
+                    try {
+                        const response = await fetch(PROTO_API_URL);
+                        if (response.ok) {
+                            const data = await response.json();
+                            currentVersion = data.info?.version || data.version || data.openapi || null;
+                            if (currentVersion) {
+                                localStorage.setItem(STORAGE_KEY, currentVersion);
+                            }
+                        }
+                    } catch (error) {
+                        console.error('[Version Badge] Failed to fetch initial version:', error);
+                        // Use fallback version
+                        currentVersion = '1.6.0';
+                        localStorage.setItem(STORAGE_KEY, currentVersion);
+                    }
+                }
+                
+                // If still no version, use fallback
+                if (!currentVersion || currentVersion === 'unknown') {
+                    currentVersion = '1.6.0';
+                    localStorage.setItem(STORAGE_KEY, currentVersion);
+                }
+                
+                // Display current version in grey (not new)
+                console.log('[Version Badge] Displaying current version:', currentVersion);
+                updateVersionBadge(currentVersion, false);
+            }, 500);
+        });
+
+        
     </script>
 </body>
 </html>
