@@ -335,11 +335,12 @@
             font-size: 1rem;
             color: white;
             transition: all 0.3s ease;
-            cursor: default;
+            cursor: pointer;
         }
         
         .api-version-badge:hover {
-            opacity: 0.9;
+            opacity: 0.85;
+            transform: translateY(-1px);
         }
         
         .api-version-badge.new-version {
@@ -926,11 +927,16 @@
                         acknowledgeNewVersion(version);
                     };
                 } else {
-                    // Current version - stay GREY and show "API Version X.X.X"
+                    // Current version - stay GREY but make it clickable to view API docs
                     badge.classList.remove('new-version');
                     badge.textContent = `API Version ${version}`;
-                    badge.title = 'Current API version';
-                    badge.onclick = null;
+                    badge.title = 'Click to view API specification';
+                    badge.style.cursor = 'pointer';
+                    
+                    // Make badge clickable to open API docs (without acknowledgment)
+                    badge.onclick = function() {
+                        window.open('https://github.com/btc-mining/proto-api/blob/main/mdk/MDK-API.json', '_blank');
+                    };
                 }
             }
         }
@@ -942,14 +948,18 @@
             localStorage.setItem('version_acknowledged', version);
             localStorage.setItem('version_acknowledged_timestamp', Date.now());
             
-            // Remove NEW indicator
+            // Remove NEW indicator but keep badge clickable
             const badge = document.getElementById('api-version-badge');
             if (badge) {
                 badge.classList.remove('new-version');
                 badge.innerHTML = `API Version ${version}`;
-                badge.title = 'Current API version (acknowledged)';
-                badge.onclick = null;
-                badge.style.cursor = 'default';
+                badge.title = 'Click to view API specification';
+                badge.style.cursor = 'pointer';
+                
+                // Keep badge clickable to open API docs
+                badge.onclick = function() {
+                    window.open('https://github.com/btc-mining/proto-api/blob/main/mdk/MDK-API.json', '_blank');
+                };
             }
             
             // Dismiss alert banner if present
@@ -984,7 +994,7 @@
             updateVersionBadge(newVersion, true);
         };
         
-        // Initialize badge on load - Show v1.6.0 as NEW (green, clickable)
+        // Initialize badge on load - Show current version (grey, non-clickable)
         window.addEventListener('DOMContentLoaded', () => {
             // Create badge immediately
             createVersionBadge();
@@ -996,9 +1006,9 @@
                 // Store as current version
                 localStorage.setItem(STORAGE_KEY, currentVersion);
                 
-                // Display as NEW version (green, clickable)
-                console.log('[Version Badge] Displaying version as NEW:', currentVersion);
-                updateVersionBadge(currentVersion, true);
+                // Display as current version (grey, non-clickable) - not as NEW
+                console.log('[Version Badge] Displaying current version:', currentVersion);
+                updateVersionBadge(currentVersion, false);
             }, 500);
         });
 
