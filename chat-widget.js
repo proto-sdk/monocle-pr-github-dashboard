@@ -170,12 +170,36 @@ class PRChatbot {
     async processMessage(message) {
         const lowerMsg = message.toLowerCase();
 
-        // Check if PRs are loaded
+        // Check if PRs are loaded, if not try to fetch them
         if (!window.allPRs || window.allPRs.length === 0) {
-            return {
-                text: '⚠️ No PR data loaded yet. Please enter your GitHub token and fetch PRs first.',
-                suggestions: []
-            };
+            const token = localStorage.getItem('githubToken');
+            
+            if (!token) {
+                return {
+                    text: '⚠️ No GitHub token found. Please enter your GitHub token in the dashboard and click Refresh first.',
+                    suggestions: []
+                };
+            }
+
+            // Try to fetch PRs automatically
+            this.addMessage('Fetching PR data...', true);
+            
+            try {
+                await window.fetchPRs();
+                
+                // Check again after fetch
+                if (!window.allPRs || window.allPRs.length === 0) {
+                    return {
+                        text: '⚠️ No PRs loaded. Please make sure your GitHub token is valid and try refreshing the dashboard.',
+                        suggestions: []
+                    };
+                }
+            } catch (error) {
+                return {
+                    text: '⚠️ Failed to fetch PR data. Please refresh the dashboard manually.',
+                    suggestions: []
+                };
+            }
         }
 
         const prs = window.allPRs;
