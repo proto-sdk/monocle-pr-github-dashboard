@@ -718,7 +718,7 @@
     <script>
 // Proto API Version Monitor - DEMO VERSION
         const PROTO_API_URL = 'https://raw.githubusercontent.com/btc-mining/proto-api/main/mdk/MDK-API.json';
-        const CHECK_INTERVAL = 300000; // 5 minutes (300 seconds)
+        const CHECK_INTERVAL = 900000; // 15 minutes (900 seconds)
         const STORAGE_KEY = 'proto_api_version';
         
         let checkCount = 0;
@@ -854,8 +854,8 @@
         
         // Initialize version monitoring
         window.addEventListener('DOMContentLoaded', () => {
-            console.log('[Version Monitor] DEMO MODE - Initializing...');
-            console.log('[Version Monitor] Checking every 30 seconds (demo interval)');
+            console.log('[Version Monitor] Initializing...');
+            console.log('[Version Monitor] Checking every 15 minutes');
             console.log('[Version Monitor] To simulate a version change, open DevTools and run:');
             console.log('  localStorage.setItem("proto_api_version", "1.0.0")');
             console.log('  Then wait for next check cycle');
