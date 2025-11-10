@@ -90,8 +90,11 @@ class PRChatbot {
         
         const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         
+        // Format content with proper line breaks and lists
+        const formattedContent = this.formatMessage(content);
+        
         messageDiv.innerHTML = `
-            <div class="chat-message-content">${content}</div>
+            <div class="chat-message-content">${formattedContent}</div>
             <div class="chat-message-time">${time}</div>
         `;
         
@@ -134,6 +137,46 @@ class PRChatbot {
     hideTyping() {
         const typing = document.querySelector('#typing-indicator');
         if (typing) typing.remove();
+    }
+
+    formatMessage(text) {
+        // Convert markdown-style formatting to HTML
+        let formatted = text;
+        
+        // Bold text: **text** -> <strong>text</strong>
+        formatted = formatted.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        
+        // Convert bullet points to proper HTML list
+        const lines = formatted.split('\n');
+        let inList = false;
+        let result = [];
+        
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+            
+            if (line.startsWith('•')) {
+                if (!inList) {
+                    result.push('<ul style="margin: 8px 0; padding-left: 20px;">');
+                    inList = true;
+                }
+                const content = line.substring(1).trim();
+                result.push(`<li style="margin: 4px 0;">${content}</li>`);
+            } else {
+                if (inList) {
+                    result.push('</ul>');
+                    inList = false;
+                }
+                if (line) {
+                    result.push(`<div style="margin: 4px 0;">${line}</div>`);
+                }
+            }
+        }
+        
+        if (inList) {
+            result.push('</ul>');
+        }
+        
+        return result.join('');
     }
 
     addWelcomeMessage() {
