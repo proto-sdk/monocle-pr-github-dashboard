@@ -691,7 +691,8 @@
     </div>
 
     <script>
-        let allPRs = [];
+        // Make allPRs globally accessible for chat widget
+        window.allPRs = [];
         let refreshInterval;
         let refreshTimeout;
         const REFRESH_INTERVAL = 15 * 60 * 1000; // 15 minutes in milliseconds
