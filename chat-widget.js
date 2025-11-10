@@ -176,30 +176,16 @@ class PRChatbot {
             
             if (!token) {
                 return {
-                    text: '⚠️ No GitHub token found. Please enter your GitHub token in the dashboard and click Refresh first.',
+                    text: '⚠️ No GitHub token found. Please click the Refresh button in the dashboard to load PRs.',
                     suggestions: []
                 };
             }
 
-            // Try to fetch PRs automatically
-            this.addMessage('Fetching PR data...', true);
-            
-            try {
-                await window.fetchPRs();
-                
-                // Check again after fetch
-                if (!window.allPRs || window.allPRs.length === 0) {
-                    return {
-                        text: '⚠️ No PRs loaded. Please make sure your GitHub token is valid and try refreshing the dashboard.',
-                        suggestions: []
-                    };
-                }
-            } catch (error) {
-                return {
-                    text: '⚠️ Failed to fetch PR data. Please refresh the dashboard manually.',
-                    suggestions: []
-                };
-            }
+            // Show fetching message
+            return {
+                text: '⚠️ No PR data loaded yet. Please click the **Refresh** button in the dashboard to load PRs, then try your question again.',
+                suggestions: []
+            };
         }
 
         const prs = window.allPRs;
