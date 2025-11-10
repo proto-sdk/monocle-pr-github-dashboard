@@ -180,17 +180,37 @@ class PRChatbot {
     }
 
     addWelcomeMessage() {
+        const welcomeText = `Hi! I'm your PR Assistant. I can help you with:\n\n` +
+            `**📊 Basic Queries:**\n` +
+            `• "How many open PRs?" - Statistics\n` +
+            `• "Show open PRs" - List open PRs\n` +
+            `• "Show merged PRs" - Recently merged\n` +
+            `• "PRs by alice" - Filter by author\n` +
+            `• "PRs with bug label" - Filter by label\n` +
+            `• "Top contributors" - Contributor stats\n` +
+            `• "Show PR #142" - Specific PR details\n` +
+            `• "All labels" - List all labels\n` +
+            `• "Search for memory leak" - Search titles\n\n` +
+            `**🔬 Advanced Analytics:**\n` +
+            `• "Dependencies for PR #142" - Find related PRs\n` +
+            `• "What files changed?" - File analysis\n` +
+            `• "Group by labels" - Label clustering\n` +
+            `• "Analyze trends" - 30-day analytics\n` +
+            `• "Get insights" - AI-powered insights\n` +
+            `• "Predict merge time for PR #142" - Merge estimation\n` +
+            `• "Watch PR #142" - Track specific PR\n\n` +
+            `Try any query or click a suggestion below!`;
+        
         const suggestions = [
+            'How many open PRs?',
+            'Analyze trends',
+            'Get insights',
             'Show open PRs',
-            'PRs by author',
-            'Recent merged PRs',
-            'PRs with bugs label'
+            'Top contributors',
+            'Group by labels'
         ];
-        this.addMessage(
-            'Hi! I can help you find and analyze pull requests. What would you like to know?',
-            true,
-            suggestions
-        );
+        
+        this.addMessage(welcomeText, true, suggestions);
     }
 
     async sendMessage(message) {
