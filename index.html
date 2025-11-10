@@ -411,6 +411,7 @@
         <div class="filter-section">
             <input type="text" id="author-filter" class="filter-input" placeholder="Filter by author" onkeyup="filterAndDisplayPRs()">
             <input type="text" id="title-filter" class="filter-input" placeholder="Filter by title" onkeyup="filterAndDisplayPRs()">
+            <input type="text" id="tag-filter" class="filter-input" placeholder="Filter by tag/label" onkeyup="filterAndDisplayPRs()">
             <select id="status-filter" class="filter-input" onchange="filterAndDisplayPRs()">
                 <option value="all">All PRs</option>
                 <option value="open">Open</option>
@@ -565,11 +566,17 @@
         function filterAndDisplayPRs() {
             const authorFilter = document.getElementById('author-filter').value.toLowerCase();
             const titleFilter = document.getElementById('title-filter').value.toLowerCase();
+            const tagFilter = document.getElementById('tag-filter').value.toLowerCase();
             const statusFilter = document.getElementById('status-filter').value;
 
             const filteredPRs = allPRs.filter(pr => {
                 const matchesAuthor = pr.user.login.toLowerCase().includes(authorFilter);
                 const matchesTitle = pr.title.toLowerCase().includes(titleFilter);
+                
+                // Check if any label matches the tag filter
+                const matchesTag = tagFilter === '' || pr.labels.some(label => 
+                    label.name.toLowerCase().includes(tagFilter)
+                );
                 
                 let matchesStatus = true;
                 if (statusFilter === 'open') {
@@ -580,7 +587,7 @@
                     matchesStatus = pr.merged_at;
                 }
 
-                return matchesAuthor && matchesTitle && matchesStatus;
+                return matchesAuthor && matchesTitle && matchesTag && matchesStatus;
             });
 
             displayPRs(filteredPRs);
