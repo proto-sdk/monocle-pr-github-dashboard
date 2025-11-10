@@ -405,17 +405,354 @@ class PRChatbot {
             }
         }
 
+        // Pattern: Dependencies
+        if (lowerMsg.match(/dependencies|depends|conflicts|overlaps?/)) {
+            const match = lowerMsg.match(/#?(\d+)/);
+            if (match) {
+                const prNumber = parseInt(match[1]);
+                return await this.getPRDependencies(prNumber, prs);
+            }
+            return {
+                text: 'Please specify a PR number. Example: "dependencies for PR #142"',
+                suggestions: []
+            };
+        }
+
+        // Pattern: Files changed
+        if (lowerMsg.match(/files? changed|modified files|what files/)) {
+            return await this.getFilesChanged(prs);
+        }
+
+        // Pattern: Group by labels
+        if (lowerMsg.match(/group by labels?|cluster|categorize/)) {
+            return this.groupByLabels(prs);
+        }
+
+        // Pattern: Analyze trends
+        if (lowerMsg.match(/trends?|analytics?|statistics?|analyze/)) {
+            return this.analyzeTrends(prs);
+        }
+
+        // Pattern: Insights
+        if (lowerMsg.match(/insights?|patterns?|recommendations?/)) {
+            return this.getPRInsights(prs);
+        }
+
+        // Pattern: Predict merge time
+        if (lowerMsg.match(/predict|when.*merge|estimate.*merge/)) {
+            const match = lowerMsg.match(/#?(\d+)/);
+            if (match) {
+                const prNumber = parseInt(match[1]);
+                return this.predictMergeTime(prNumber, prs);
+            }
+            return {
+                text: 'Please specify a PR number. Example: "predict merge time for PR #142"',
+                suggestions: []
+            };
+        }
+
+        // Pattern: Watch PR
+        if (lowerMsg.match(/watch|monitor|track|alert/)) {
+            const match = lowerMsg.match(/#?(\d+)/);
+            if (match) {
+                const prNumber = parseInt(match[1]);
+                return this.watchPR(prNumber);
+            }
+            return {
+                text: 'Please specify a PR number. Example: "watch PR #142"',
+                suggestions: []
+            };
+        }
+
         // Default: Help message
         return {
             text: `I can help you with:\n\n` +
+                  `**Basic:**\n` +
                   `• **Statistics**: "How many open PRs?"\n` +
                   `• **By status**: "Show open PRs", "Show merged PRs"\n` +
                   `• **By author**: "PRs by alice"\n` +
                   `• **By label**: "PRs with bug label"\n` +
                   `• **Contributors**: "Top contributors"\n` +
                   `• **Specific PR**: "Show PR #142"\n` +
-                  `• **Search**: "Find memory leak"`,
-            suggestions: ['Show open PRs', 'Top contributors', 'How many PRs?']
+                  `• **Search**: "Find memory leak"\n\n` +
+                  `**Advanced:**\n` +
+                  `• **Dependencies**: "Dependencies for PR #142"\n` +
+                  `• **Files**: "What files changed?"\n` +
+                  `• **Grouping**: "Group by labels"\n` +
+                  `• **Trends**: "Analyze trends"\n` +
+                  `• **Insights**: "Get insights"\n` +
+                  `• **Predictions**: "Predict merge time for PR #142"\n` +
+                  `• **Watch**: "Watch PR #142"`,
+            suggestions: ['Show open PRs', 'Analyze trends', 'Get insights']
+        };
+    }
+
+    // Advanced feature: Get PR Dependencies
+    async getPRDependencies(prNumber, prs) {
+        const targetPR = prs.find(pr => pr.number === prNumber);
+        if (!targetPR) {
+            return { text: `PR #${prNumber} not found.`, suggestions: [] };
+        }
+
+        // For now, we'll check title/label similarity as a proxy for dependencies
+        // In a real implementation, we'd fetch file changes from GitHub API
+        const related = prs.filter(pr => {
+            if (pr.number === prNumber) return false;
+            
+            // Check for shared labels
+            const sharedLabels = pr.labels.filter(label =>
+                targetPR.labels.some(tl => tl.name === label.name)
+            );
+            
+            // Check for similar titles (common words)
+            const targetWords = targetPR.title.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+            const prWords = pr.title.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+            const commonWords = targetWords.filter(w => prWords.includes(w));
+            
+            return sharedLabels.length > 0 || commonWords.length > 1;
+        });
+
+        if (related.length === 0) {
+            return {
+                text: `📊 **Dependencies for PR #${prNumber}:**\n\nNo related PRs found.`,
+                suggestions: ['Show open PRs']
+            };
+        }
+
+        const list = related.slice(0, 5).map(pr => {
+            const sharedLabels = pr.labels.filter(label =>
+                targetPR.labels.some(tl => tl.name === label.name)
+            ).map(l => l.name).join(', ');
+            return `• #${pr.number}: ${pr.title}\n  ${sharedLabels ? `Shared labels: ${sharedLabels}` : 'Similar title'}`;
+        }).join('\n');
+
+        return {
+            text: `📊 **Related PRs for #${prNumber}** (${targetPR.title}):\n\n${list}\n\n${related.length > 5 ? `...and ${related.length - 5} more` : ''}`,
+            suggestions: ['Show open PRs', 'Get insights']
+        };
+    }
+
+    // Advanced feature: Get Files Changed
+    async getFilesChanged(prs) {
+        // Group PRs by common patterns in titles (as proxy for file changes)
+        const patterns = {};
+        prs.forEach(pr => {
+            const words = pr.title.toLowerCase().split(/\s+/).filter(w => w.length > 4);
+            words.forEach(word => {
+                if (!patterns[word]) patterns[word] = [];
+                patterns[word].push(pr.number);
+            });
+        });
+
+        const topPatterns = Object.entries(patterns)
+            .sort((a, b) => b[1].length - a[1].length)
+            .slice(0, 10)
+            .filter(([_, prs]) => prs.length > 1);
+
+        if (topPatterns.length === 0) {
+            return {
+                text: '📁 **Files Changed:**\n\nNo common patterns found across PRs.',
+                suggestions: ['Show open PRs']
+            };
+        }
+
+        const list = topPatterns.map(([pattern, prNumbers]) =>
+            `• **${pattern}**: ${prNumbers.length} PRs (${prNumbers.slice(0, 3).map(n => `#${n}`).join(', ')}${prNumbers.length > 3 ? '...' : ''})`
+        ).join('\n');
+
+        return {
+            text: `📁 **Common Areas Across PRs:**\n\n${list}`,
+            suggestions: ['Group by labels', 'Analyze trends']
+        };
+    }
+
+    // Advanced feature: Group by Labels
+    groupByLabels(prs) {
+        const labelGroups = {};
+        
+        prs.forEach(pr => {
+            if (pr.labels.length === 0) {
+                if (!labelGroups['No Labels']) labelGroups['No Labels'] = [];
+                labelGroups['No Labels'].push(pr);
+            } else {
+                pr.labels.forEach(label => {
+                    if (!labelGroups[label.name]) labelGroups[label.name] = [];
+                    labelGroups[label.name].push(pr);
+                });
+            }
+        });
+
+        const sorted = Object.entries(labelGroups)
+            .sort((a, b) => b[1].length - a[1].length)
+            .slice(0, 10);
+
+        const list = sorted.map(([label, prs]) =>
+            `• **${label}**: ${prs.length} PRs`
+        ).join('\n');
+
+        return {
+            text: `🏷️ **PRs Grouped by Labels:**\n\n${list}`,
+            suggestions: ['Show open PRs', 'Analyze trends']
+        };
+    }
+
+    // Advanced feature: Analyze Trends
+    analyzeTrends(prs) {
+        const now = Date.now();
+        const thirtyDaysAgo = now - (30 * 24 * 60 * 60 * 1000);
+        
+        const recent = prs.filter(pr => new Date(pr.created_at).getTime() > thirtyDaysAgo);
+        const merged = recent.filter(pr => pr.merged_at);
+        const open = recent.filter(pr => pr.state === 'open');
+        
+        // Calculate average time to merge
+        const mergeTimes = merged.map(pr => {
+            const created = new Date(pr.created_at).getTime();
+            const mergedTime = new Date(pr.merged_at).getTime();
+            return (mergedTime - created) / (1000 * 60 * 60 * 24);
+        });
+        const avgMergeTime = mergeTimes.length > 0 
+            ? (mergeTimes.reduce((a, b) => a + b, 0) / mergeTimes.length).toFixed(1)
+            : 'N/A';
+
+        // Top authors in last 30 days
+        const authorCounts = {};
+        recent.forEach(pr => {
+            authorCounts[pr.user.login] = (authorCounts[pr.user.login] || 0) + 1;
+        });
+        const topAuthor = Object.entries(authorCounts).sort((a, b) => b[1] - a[1])[0];
+
+        const mergeRate = recent.length > 0 ? ((merged.length / recent.length) * 100).toFixed(1) : '0';
+
+        return {
+            text: `📈 **PR Trends (Last 30 Days):**\n\n` +
+                  `• Total PRs: ${recent.length}\n` +
+                  `• Merged: ${merged.length} (${mergeRate}%)\n` +
+                  `• Still Open: ${open.length}\n` +
+                  `• Avg Merge Time: ${avgMergeTime} days\n` +
+                  `• Top Contributor: ${topAuthor ? `${topAuthor[0]} (${topAuthor[1]} PRs)` : 'N/A'}`,
+            suggestions: ['Get insights', 'Show open PRs']
+        };
+    }
+
+    // Advanced feature: Get PR Insights
+    getPRInsights(prs) {
+        const insights = [];
+        
+        // Check for stale PRs
+        const now = Date.now();
+        const twoWeeksAgo = now - (14 * 24 * 60 * 60 * 1000);
+        const stalePRs = prs.filter(pr => 
+            pr.state === 'open' && new Date(pr.updated_at).getTime() < twoWeeksAgo
+        );
+        
+        if (stalePRs.length > 0) {
+            insights.push(`⚠️ ${stalePRs.length} PRs haven't been updated in 2+ weeks`);
+        }
+
+        // Check merge rate
+        const merged = prs.filter(pr => pr.merged_at);
+        const mergeRate = (merged.length / prs.length) * 100;
+        if (mergeRate < 50) {
+            insights.push(`⚠️ Low merge rate (${mergeRate.toFixed(1)}%) - many PRs are closed without merging`);
+        } else {
+            insights.push(`✅ Good merge rate (${mergeRate.toFixed(1)}%)`);
+        }
+
+        // Check for unlabeled PRs
+        const unlabeled = prs.filter(pr => pr.labels.length === 0);
+        if (unlabeled.length > 5) {
+            insights.push(`⚠️ ${unlabeled.length} PRs have no labels`);
+        }
+
+        // Check author diversity
+        const authors = new Set(prs.map(pr => pr.user.login));
+        if (authors.size < 5) {
+            insights.push(`ℹ️ Limited contributor diversity (${authors.size} contributors)`);
+        } else {
+            insights.push(`✅ Good contributor diversity (${authors.size} contributors)`);
+        }
+
+        if (insights.length === 0) {
+            insights.push('✅ Everything looks good!');
+        }
+
+        return {
+            text: `💡 **PR Insights:**\n\n${insights.map(i => `• ${i}`).join('\n')}`,
+            suggestions: ['Analyze trends', 'Show open PRs']
+        };
+    }
+
+    // Advanced feature: Predict Merge Time
+    predictMergeTime(prNumber, prs) {
+        const pr = prs.find(p => p.number === prNumber);
+        if (!pr) {
+            return { text: `PR #${prNumber} not found.`, suggestions: [] };
+        }
+
+        if (pr.merged_at) {
+            return {
+                text: `📊 **PR #${prNumber}:**\n\nThis PR is already merged on ${new Date(pr.merged_at).toLocaleDateString()}.`,
+                suggestions: ['Show open PRs']
+            };
+        }
+
+        if (pr.state === 'closed') {
+            return {
+                text: `📊 **PR #${prNumber}:**\n\nThis PR is closed without merging.`,
+                suggestions: ['Show open PRs']
+            };
+        }
+
+        // Calculate average merge time from historical data
+        const merged = prs.filter(p => p.merged_at);
+        const mergeTimes = merged.map(p => {
+            const created = new Date(p.created_at).getTime();
+            const mergedTime = new Date(p.merged_at).getTime();
+            return (mergedTime - created) / (1000 * 60 * 60 * 24);
+        });
+        
+        const avgMergeTime = mergeTimes.length > 0
+            ? mergeTimes.reduce((a, b) => a + b, 0) / mergeTimes.length
+            : 7;
+
+        const prAge = (Date.now() - new Date(pr.created_at).getTime()) / (1000 * 60 * 60 * 24);
+        const estimatedDaysRemaining = Math.max(0, avgMergeTime - prAge);
+        
+        const estimatedDate = new Date();
+        estimatedDate.setDate(estimatedDate.getDate() + estimatedDaysRemaining);
+
+        return {
+            text: `📊 **Merge Prediction for PR #${prNumber}:**\n\n` +
+                  `• Current Age: ${prAge.toFixed(1)} days\n` +
+                  `• Avg Merge Time: ${avgMergeTime.toFixed(1)} days\n` +
+                  `• Estimated Days Remaining: ${estimatedDaysRemaining.toFixed(1)}\n` +
+                  `• Predicted Merge Date: ${estimatedDate.toLocaleDateString()}\n\n` +
+                  `⚠️ This is an estimate based on historical data.`,
+            suggestions: ['Show open PRs', 'Analyze trends']
+        };
+    }
+
+    // Advanced feature: Watch PR
+    watchPR(prNumber) {
+        // Store in localStorage
+        let watchList = JSON.parse(localStorage.getItem('pr_watch_list') || '[]');
+        
+        if (watchList.includes(prNumber)) {
+            return {
+                text: `👁️ Already watching PR #${prNumber}.\n\nNote: Alerts are not yet implemented. This feature will notify you of changes in a future update.`,
+                suggestions: ['Show open PRs']
+            };
+        }
+
+        watchList.push(prNumber);
+        localStorage.setItem('pr_watch_list', JSON.stringify(watchList));
+
+        return {
+            text: `👁️ Now watching PR #${prNumber}!\n\n` +
+                  `Currently watching ${watchList.length} PR(s).\n\n` +
+                  `Note: Alerts are not yet implemented. This feature will notify you of changes in a future update.`,
+            suggestions: ['Show open PRs', 'List watched PRs']
         };
     }
 }
