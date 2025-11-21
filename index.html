@@ -431,14 +431,11 @@
         const REFRESH_INTERVAL = 15 * 60 * 1000; // 15 minutes in milliseconds
 
         // Load token and start refresh cycle when page loads
-        // Function to mask token for display
+        // Function to mask token for display - completely obscure
         function maskToken(token) {
-            if (!token || token.length < 8) return token;
-            // Show first 4 and last 4 characters, mask the middle
-            const start = token.substring(0, 4);
-            const end = token.substring(token.length - 4);
-            const masked = '•'.repeat(Math.min(token.length - 8, 32));
-            return start + masked + end;
+            if (!token) return token;
+            // Show only dots - completely obscure the token
+            return '•'.repeat(40); // Fixed length for consistency
         }
 
         // Store actual token separately (not in the input field)
