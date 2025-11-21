@@ -431,13 +431,28 @@
         const REFRESH_INTERVAL = 15 * 60 * 1000; // 15 minutes in milliseconds
 
         // Load token and start refresh cycle when page loads
+        // Function to mask token for display
+        function maskToken(token) {
+            if (!token || token.length < 8) return token;
+            // Show first 4 and last 4 characters, mask the middle
+            const start = token.substring(0, 4);
+            const end = token.substring(token.length - 4);
+            const masked = '•'.repeat(Math.min(token.length - 8, 32));
+            return start + masked + end;
+        }
+
+        // Store actual token separately (not in the input field)
+        let actualToken = null;
+
         window.onload = function() {
             const savedToken = localStorage.getItem('githubToken');
             console.log('[DEBUG] Checking for saved token...');
-            console.log('[DEBUG] savedToken:', savedToken);
+            console.log('[DEBUG] savedToken exists:', !!savedToken);
             if (savedToken) {
-                document.getElementById('token').value = savedToken;
-            console.log('[DEBUG] Token set to input field');
+                actualToken = savedToken; // Store actual token
+                document.getElementById('token').value = maskToken(savedToken); // Display masked
+                document.getElementById('token').setAttribute('data-masked', 'true');
+                console.log('[DEBUG] Token masked and set to input field');
                 checkTokenExpiration();
                 fetchPRs(); // Automatically fetch PRs if token exists
             }
@@ -659,18 +674,29 @@
         }
 
         async function fetchPRs() {
-            const token = document.getElementById('token').value.trim();
+            let token = document.getElementById('token').value.trim();
             const prList = document.getElementById('pr-list');
             const debugInfo = document.getElementById('debug-info');
             debugInfo.style.display = 'none';
+
+            // If field is masked, use the actual token
+            const isMasked = document.getElementById('token').getAttribute('data-masked') === 'true';
+            if (isMasked && actualToken) {
+                token = actualToken;
+            } else if (!isMasked && token) {
+                // User entered a new token, save it
+                actualToken = token;
+                localStorage.setItem('githubToken', token);
+                // Mask the display
+                document.getElementById('token').value = maskToken(token);
+                document.getElementById('token').setAttribute('data-masked', 'true');
+            }
 
             if (!token) {
                 prList.innerHTML = '<div class="error">Please enter a GitHub token</div>';
                 return;
             }
 
-            // Save token in localStorage
-            localStorage.setItem('githubToken', token);
             checkTokenExpiration();
 
             prList.innerHTML = '<div class="loading">Loading pull requests...</div>';
