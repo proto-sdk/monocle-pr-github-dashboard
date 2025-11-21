@@ -433,8 +433,11 @@
         // Load token and start refresh cycle when page loads
         window.onload = function() {
             const savedToken = localStorage.getItem('githubToken');
+            console.log('[DEBUG] Checking for saved token...');
+            console.log('[DEBUG] savedToken:', savedToken);
             if (savedToken) {
                 document.getElementById('token').value = savedToken;
+            console.log('[DEBUG] Token set to input field');
                 checkTokenExpiration();
                 fetchPRs(); // Automatically fetch PRs if token exists
             }
