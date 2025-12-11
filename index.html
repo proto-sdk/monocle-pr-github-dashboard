@@ -924,13 +924,15 @@
             console.log('  localStorage.setItem("proto_api_version", "1.0.0")');
             console.log('  Then wait for next check cycle');
             
-            updateMonitorStatus('Initializing...', false);
+            updateMonitorStatus('Disabled - API not available', false);
             
-            // Initial check
-            checkProtoAPIVersion();
+            // DISABLED: Initial check - prevents 404 on page load
+            // checkProtoAPIVersion();
             
-            // Set up periodic checks
-            setInterval(checkProtoAPIVersion, CHECK_INTERVAL);
+            // DISABLED: Set up periodic checks - prevents repeated 404s
+            // setInterval(checkProtoAPIVersion, CHECK_INTERVAL);
+            
+            console.log('[Version Monitor] Auto-checking disabled - API repository not available');
         });
         
         // Add demo controls
