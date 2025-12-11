@@ -728,6 +728,28 @@
                 }
 
                 if (!response.ok) {
+                    if (response.status === 404) {
+                        prList.innerHTML = `
+                            <div class="error">
+                                <h3>Repository Not Found (404)</h3>
+                                <p>The repository <strong>btc-mining/miner-firmware</strong> could not be found.</p>
+                                <p><strong>Possible reasons:</strong></p>
+                                <ul style="text-align: left; margin: 1rem auto; max-width: 600px;">
+                                    <li>The repository is private and requires authentication</li>
+                                    <li>The repository has been moved or renamed</li>
+                                    <li>The repository does not exist</li>
+                                    <li>Your GitHub token does not have access to this repository</li>
+                                </ul>
+                                <p><strong>To fix this:</strong></p>
+                                <ol style="text-align: left; margin: 1rem auto; max-width: 600px;">
+                                    <li>Verify the repository exists at <a href="https://github.com/btc-mining/miner-firmware" target="_blank" style="color: var(--accent-color);">github.com/btc-mining/miner-firmware</a></li>
+                                    <li>Ensure your GitHub token has read access to the repository</li>
+                                    <li>Update the repository URL in the code if it has moved</li>
+                                </ol>
+                            </div>
+                        `;
+                        return;
+                    }
                     showDebugInfo({
                         status: response.status,
                         statusText: response.statusText,
@@ -760,6 +782,18 @@
             try {
                 const response = await fetch(PROTO_API_URL);
                 if (!response.ok) {
+                    if (response.status === 404) {
+                        console.warn('[Version Monitor] Proto API repository not found (404)');
+                        console.warn('[Version Monitor] URL:', PROTO_API_URL);
+                        updateMonitorStatus('API repository not found (404)', false);
+                        // Use cached version if available, otherwise use default
+                        const storedVersion = localStorage.getItem(STORAGE_KEY);
+                        if (!storedVersion || storedVersion === 'unknown') {
+                            localStorage.setItem(STORAGE_KEY, '1.6.0');
+                            updateVersionBadge('1.6.0', false);
+                        }
+                        return;
+                    }
                     throw new Error(`HTTP ${response.status}`);
                 }
                 
