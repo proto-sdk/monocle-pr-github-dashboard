@@ -920,19 +920,20 @@
         window.addEventListener('DOMContentLoaded', () => {
             console.log('[Version Monitor] Initializing...');
             console.log('[Version Monitor] Checking every 15 minutes');
+            console.log('[Version Monitor] API URL:', PROTO_API_URL);
             console.log('[Version Monitor] To simulate a version change, open DevTools and run:');
             console.log('  localStorage.setItem("proto_api_version", "1.0.0")');
             console.log('  Then wait for next check cycle');
             
-            updateMonitorStatus('Disabled - API not available', false);
+            updateMonitorStatus('Initializing...', false);
             
-            // DISABLED: Initial check - prevents 404 on page load
-            // checkProtoAPIVersion();
+            // Initial check - with graceful 404 handling
+            checkProtoAPIVersion();
             
-            // DISABLED: Set up periodic checks - prevents repeated 404s
-            // setInterval(checkProtoAPIVersion, CHECK_INTERVAL);
+            // Set up periodic checks - errors are handled gracefully
+            setInterval(checkProtoAPIVersion, CHECK_INTERVAL);
             
-            console.log('[Version Monitor] Auto-checking disabled - API repository not available');
+            console.log('[Version Monitor] Enabled - checking every 15 minutes');
         });
         
         // Add demo controls
