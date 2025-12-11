@@ -789,8 +789,8 @@
                         // Use cached version if available, otherwise use default
                         const storedVersion = localStorage.getItem(STORAGE_KEY);
                         if (!storedVersion || storedVersion === 'unknown') {
-                            localStorage.setItem(STORAGE_KEY, '1.6.0');
-                            updateVersionBadge('1.6.0', false);
+                            localStorage.setItem(STORAGE_KEY, '1.7.1');
+                            updateVersionBadge('1.7.1', false);
                         }
                         return;
                     }
@@ -803,7 +803,7 @@
                 const currentVersion = data.info?.version || 
                                      data.version || 
                                      data.openapi || 
-                                     '1.6.0'; // Demo default
+                                     '1.7.1'; // Demo default
                 
                 console.log(`[Version Monitor] Check #${checkCount}: Current version = ${currentVersion}`);
                 
@@ -847,8 +847,8 @@
                 // For demo, use default version on error
                 const storedVersion = localStorage.getItem(STORAGE_KEY);
                 if (!storedVersion || storedVersion === 'unknown') {
-                    localStorage.setItem(STORAGE_KEY, '1.6.0');
-                    updateVersionBadge('1.6.0', false);
+                    localStorage.setItem(STORAGE_KEY, '1.7.1');
+                    updateVersionBadge('1.7.1', false);
                 }
             }
         }
@@ -968,7 +968,7 @@
             badge.id = 'api-version-badge';
             
             // Get stored version or use default
-            const storedVersion = localStorage.getItem(STORAGE_KEY) || '1.6.0';
+            const storedVersion = localStorage.getItem(STORAGE_KEY) || '1.7.1';
             badge.innerHTML = `API Version ${storedVersion}`;
             badge.title = 'Click to view API specification';
             badge.style.cursor = 'pointer';
@@ -1080,7 +1080,7 @@
         window.addEventListener('DOMContentLoaded', () => {
             // Ensure we have a default version stored
             if (!localStorage.getItem(STORAGE_KEY)) {
-                localStorage.setItem(STORAGE_KEY, '1.6.0');
+                localStorage.setItem(STORAGE_KEY, '1.7.1');
             }
             
             // Create badge immediately with stored version
