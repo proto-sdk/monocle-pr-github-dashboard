@@ -966,7 +966,15 @@
             const badge = document.createElement('span');
             badge.className = 'api-version-badge version';
             badge.id = 'api-version-badge';
-            badge.innerHTML = `API Version Check`;
+            
+            // Get stored version or use default
+            const storedVersion = localStorage.getItem(STORAGE_KEY) || '1.6.0';
+            badge.innerHTML = `API Version ${storedVersion}`;
+            badge.title = 'Click to view API specification';
+            badge.style.cursor = 'pointer';
+            badge.onclick = function() {
+                window.open('https://github.com/btc-mining/proto-api/blob/main/mdk/MDK-API.json', '_blank');
+            };
             
             // Insert right after the PR count badge
             prCountBadge.parentNode.insertBefore(badge, prCountBadge.nextSibling);
@@ -1068,22 +1076,17 @@
             updateVersionBadge(newVersion, true);
         };
         
-        // Initialize badge on load - Show current version (grey, non-clickable)
+        // Initialize badge on load - Show current version
         window.addEventListener('DOMContentLoaded', () => {
-            // Create badge immediately
+            // Ensure we have a default version stored
+            if (!localStorage.getItem(STORAGE_KEY)) {
+                localStorage.setItem(STORAGE_KEY, '1.6.0');
+            }
+            
+            // Create badge immediately with stored version
             createVersionBadge();
             
-            setTimeout(() => {
-                // Set current version to 1.6.0
-                const currentVersion = '1.6.0';
-                
-                // Store as current version
-                localStorage.setItem(STORAGE_KEY, currentVersion);
-                
-                // Display as current version (grey, non-clickable) - not as NEW
-                console.log('[Version Badge] Displaying current version:', currentVersion);
-                updateVersionBadge(currentVersion, false);
-            }, 500);
+            console.log('[Version Badge] Initialized with version:', localStorage.getItem(STORAGE_KEY));
         });
 
         
